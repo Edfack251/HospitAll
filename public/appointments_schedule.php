@@ -1,19 +1,20 @@
 <?php
 session_start();
 require_once '../app/config/database.php';
+require_once '../app/helpers/auth_helper.php';
+require_once '../app/controllers/AppointmentsController.php';
+
+requireLogin();
+
+$controller = new AppointmentsController($pdo);
+$data = $controller->getSchedulingData();
+$pacientes = $data['pacientes'];
+$medicos = $data['medicos'];
 
 $pageTitle = 'Agendar Cita - HospitAll';
 $activePage = 'citas';
 $headerTitle = 'Agendar Nueva Cita';
 $headerSubtitle = 'Selecciona el paciente, el médico y el horario.';
-
-try {
-    $pacientes = $pdo->query("SELECT id, nombre, apellido FROM pacientes ORDER BY nombre ASC")->fetchAll();
-    $medicos = $pdo->query("SELECT id, nombre, apellido, especialidad FROM medicos ORDER BY nombre ASC")->fetchAll();
-} catch (PDOException $e) {
-    $pacientes = [];
-    $medicos = [];
-}
 
 include '../views/layout/header.php';
 ?>

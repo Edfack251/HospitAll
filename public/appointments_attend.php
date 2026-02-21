@@ -3,6 +3,8 @@ session_start();
 require_once '../app/config/database.php';
 require_once '../app/helpers/auth_helper.php';
 
+require_once '../app/controllers/AppointmentsController.php';
+
 checkRole(['administrador', 'medico']);
 
 $id = $_GET['id'] ?? '';
@@ -12,46 +14,17 @@ if (empty($id)) {
     exit();
 }
 
-try {
-    $stmt = $pdo->prepare("SELECT c.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido,
- p.fecha_nacimiento, p.genero, p.identificacion, p.identificacion_tipo,
- m.nombre as medico_nombre, m.apellido as medico_apellido
- FROM citas c
- JOIN pacientes p ON c.paciente_id = p.id
- JOIN medicos m ON c.medico_id = m.id
- WHERE c.id = ? AND c.estado IN ('Programada', 'Confirmada', 'En espera', 'Atendida')");
-    $stmt->execute([$id]);
-    $cita = $stmt->fetch();
+$controller = new AppointmentsController($pdo);
+$data = $controller->getAttendData($id);
 
-    if (!$cita) {
-        header("Location: dashboard.php?error=cita_no_disponible");
-        exit();
-    }
+$cita = $data['cita'];
+$historial_previo = $data['historial_previo'];
+$resultados_lab = $data['resultados_lab'];
 
-    // Verificar si ya tiene un historial clínico (para reanudar o evitar duplicados)
-    $stmt_h = $pdo->prepare("SELECT * FROM historial_clinico WHERE cita_id = ?");
-    $stmt_h->execute([$id]);
-    $historial_previo = $stmt_h->fetch();
-
-    // Calcular edad
-    $cumpleanos = new DateTime($cita['fecha_nacimiento']);
-    $hoy = new DateTime();
-    $edad = $hoy->diff($cumpleanos)->y;
-
-    // Obtener resultados de laboratorio del paciente (completados)
-    $stmt_lab = $pdo->prepare("SELECT ol.*, c.fecha as fecha_cita, m.nombre as medico_nombre, m.apellido as medico_apellido
-FROM ordenes_laboratorio ol
-JOIN historial_clinico h ON ol.historial_id = h.id
-JOIN citas c ON h.cita_id = c.id
-JOIN medicos m ON c.medico_id = m.id
-WHERE h.paciente_id = ? AND ol.estado = 'Completada'
-ORDER BY ol.fecha_resultado DESC");
-    $stmt_lab->execute([$cita['paciente_id']]);
-    $resultados_lab = $stmt_lab->fetchAll();
-
-} catch (PDOException $e) {
-    die("Error: " . $e->getMessage());
-}
+// Calcular edad
+$cumpleanos = new DateTime($cita['fecha_nacimiento']);
+$hoy = new DateTime();
+$edad = $hoy->diff($cumpleanos)->y;
 
 $pageTitle = 'Atender Cita - HospitAll';
 $activePage = 'citas';
@@ -100,7 +73,7 @@ include '../views/layout/header.php';
                                     <?php echo date('d/m/Y', strtotime($rl['fecha_resultado'])); ?>
                                 </span>
                                 <?php if ($rl['archivo_pdf']): ?>
-                                    <a href="./<?php echo htmlspecialchars($rl['archivo_pdf']); ?>" target="_blank"
+                                    <a href="<?php echo htmlspecialchars($rl['archivo_pdf']); ?>" target="_blank"
                                         class="text-[#007BFF] hover:underline text-[10px] font-bold flex items-center">
                                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path

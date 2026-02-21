@@ -48,6 +48,17 @@ if (!isset($_SESSION['user_id'])) {
             border-radius: 8px;
         }
     </style>
+    <script>
+        // Prevenir acceso al historial (botón atrás) después de cerrar sesión
+        window.addEventListener("pageshow", function (event) {
+            var historyTraversal = event.persisted ||
+                (typeof window.performance != "undefined" &&
+                    window.performance.navigation.type === 2);
+            if (historyTraversal) {
+                window.location.reload();
+            }
+        });
+    </script>
 </head>
 
 <body class="flex h-screen">

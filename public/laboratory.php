@@ -2,37 +2,28 @@
 session_start();
 require_once '../app/config/database.php';
 require_once '../app/helpers/auth_helper.php';
+require_once '../app/controllers/LaboratoryController.php';
 
 checkRole(['administrador', 'tecnico_laboratorio']);
+
+$controller = new LaboratoryController($pdo);
+$ordenes = $controller->index();
 
 $pageTitle = 'Laboratorio - HospitAll';
 $activePage = 'laboratorio';
 $headerTitle = 'Gestión de Laboratorio';
 $headerSubtitle = 'Órdenes y resultados de análisis clínicos.';
 
-try {
-    $sql = "SELECT ol.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido,
-m.nombre as medico_nombre, m.apellido as medico_apellido,
-hc.diagnostico
-FROM ordenes_laboratorio ol
-JOIN historial_clinico hc ON ol.historial_id = hc.id
-JOIN pacientes p ON hc.paciente_id = p.id
-JOIN medicos m ON hc.medico_id = m.id
-ORDER BY ol.estado ASC, ol.created_at DESC";
-    $stmt = $pdo->query($sql);
-    $ordenes = $stmt->fetchAll();
-} catch (PDOException $e) {
-    $ordenes = [];
-}
-
 include '../views/layout/header.php';
 ?>
 
 <?php
 $pendientes = array_filter($ordenes, function ($o) {
-    return $o['estado'] === 'Pendiente'; });
+    return $o['estado'] === 'Pendiente';
+});
 $completadas = array_filter($ordenes, function ($o) {
-    return $o['estado'] === 'Completada'; });
+    return $o['estado'] === 'Completada';
+});
 ?>
 
 <div class="mb-6 border-b border-gray-200">
@@ -76,13 +67,16 @@ $completadas = array_filter($ordenes, function ($o) {
                 <?php foreach ($pendientes as $o): ?>
                     <tr class="border-b hover:bg-gray-50 transition-colors">
                         <td class="py-4 font-medium">
-                            <?php echo htmlspecialchars($o['paciente_nombre'] . ' ' . $o['paciente_apellido']); ?></td>
+                            <?php echo htmlspecialchars($o['paciente_nombre'] . ' ' . $o['paciente_apellido']); ?>
+                        </td>
                         <td class="py-4 text-sm">
-                            <?php echo htmlspecialchars($o['medico_nombre'] . ' ' . $o['medico_apellido']); ?></td>
+                            <?php echo htmlspecialchars($o['medico_nombre'] . ' ' . $o['medico_apellido']); ?>
+                        </td>
                         <td class="py-4">
                             <div class="text-sm font-semibold"><?php echo htmlspecialchars($o['descripcion']); ?></div>
                             <div class="text-xs text-gray-400 italic">Diagnóstico:
-                                <?php echo htmlspecialchars(substr($o['diagnostico'], 0, 40)) . '...'; ?></div>
+                                <?php echo htmlspecialchars(substr($o['diagnostico'], 0, 40)) . '...'; ?>
+                            </div>
                         </td>
                         <td class="py-4">
                             <button
@@ -116,16 +110,18 @@ $completadas = array_filter($ordenes, function ($o) {
                 <?php foreach ($completadas as $o): ?>
                     <tr class="border-b hover:bg-gray-50 transition-colors">
                         <td class="py-4 font-medium">
-                            <?php echo htmlspecialchars($o['paciente_nombre'] . ' ' . $o['paciente_apellido']); ?></td>
+                            <?php echo htmlspecialchars($o['paciente_nombre'] . ' ' . $o['paciente_apellido']); ?>
+                        </td>
                         <td class="py-4 text-sm font-semibold"><?php echo htmlspecialchars($o['descripcion']); ?></td>
                         <td class="py-4 text-xs text-gray-500">
-                            <?php echo date('d/m/Y H:i', strtotime($o['fecha_resultado'])); ?></td>
+                            <?php echo date('d/m/Y H:i', strtotime($o['fecha_resultado'])); ?>
+                        </td>
                         <td class="py-4">
                             <div class="flex space-x-2">
                                 <button onclick="viewResult('<?php echo htmlspecialchars($o['resultado']); ?>')"
                                     class="text-xs bg-gray-100 text-gray-600 px-3 py-2 rounded hover:bg-gray-200 uppercase font-bold">Texto</button>
                                 <?php if ($o['archivo_pdf']): ?>
-                                    <a href="./<?php echo htmlspecialchars($o['archivo_pdf']); ?>" target="_blank"
+                                    <a href="<?php echo htmlspecialchars($o['archivo_pdf']); ?>" target="_blank"
                                         class="text-xs bg-blue-50 text-[#007BFF] px-3 py-2 rounded hover:bg-blue-100 font-bold border border-blue-200">PDF</a>
                                 <?php endif; ?>
                                 <button
@@ -201,7 +197,7 @@ $completadas = array_filter($ordenes, function ($o) {
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.add('hidden');
         });
-        
+
         // Desactivar todos los botones
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('border-[#007BFF]', 'text-[#007BFF]');
@@ -210,7 +206,7 @@ $completadas = array_filter($ordenes, function ($o) {
 
         // Mostrar tab actual
         document.getElementById(tabId).classList.remove('hidden');
-        
+
         // Activar botón actual
         const activeBtnId = tabId.replace('tab-', 'btn-');
         const activeBtn = document.getElementById(activeBtnId);

@@ -2,19 +2,12 @@
 session_start();
 require_once '../app/config/database.php';
 require_once '../app/helpers/auth_helper.php';
+require_once '../app/controllers/UsersController.php';
 
 checkRole(['administrador']);
 
-try {
-    $stmt = $pdo->query("SELECT u.id, u.nombre, u.apellido, u.correo_electronico, r.nombre as rol_nombre, u.created_at 
-                         FROM usuarios u 
-                         LEFT JOIN roles r ON u.rol_id = r.id 
-                         ORDER BY u.created_at DESC");
-    $usuarios = $stmt->fetchAll();
-} catch (PDOException $e) {
-    $usuarios = [];
-    $error = "Error al obtener usuarios: " . $e->getMessage();
-}
+$controller = new UsersController($pdo);
+$usuarios = $controller->index();
 
 $pageTitle = 'Gestión de Usuarios - HospitAll';
 $activePage = 'usuarios';

@@ -2,6 +2,7 @@
 session_start();
 require_once '../app/config/database.php';
 require_once '../app/helpers/auth_helper.php';
+require_once '../app/controllers/UsersController.php';
 
 checkRole(['administrador']);
 
@@ -11,58 +12,22 @@ if (!$id) {
     exit();
 }
 
+$controller = new UsersController($pdo);
+$user = $controller->getById($id);
+$formData = $controller->getFormData();
+$roles = $formData['roles'];
+
 $error = null;
 $success = null;
 
-// Obtener roles y datos del usuario
-try {
-    $stmt_roles = $pdo->query("SELECT id, nombre FROM roles ORDER BY nombre ASC");
-    $roles = $stmt_roles->fetchAll();
-
-    $stmt_user = $pdo->prepare("SELECT * FROM usuarios WHERE id = ?");
-    $stmt_user->execute([$id]);
-    $user = $stmt_user->fetch();
-
-    if (!$user) {
-        header("Location: users.php");
-        exit();
-    }
-} catch (PDOException $e) {
-    $error = "Error al cargar datos: " . $e->getMessage();
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nombre = $_POST['nombre'] ?? '';
-    $apellido = $_POST['apellido'] ?? '';
-    $correo = $_POST['correo_electronico'] ?? '';
-    $rol_id = $_POST['rol_id'] ?? '';
-    $password = $_POST['password'] ?? '';
-
-    if (empty($nombre) || empty($apellido) || empty($correo) || empty($rol_id)) {
-        $error = "Nombre, apellido, correo y rol son obligatorios.";
+    $result = $controller->update($id, $_POST);
+    if ($result === "Usuario actualizado correctamente.") {
+        $success = $result;
+        // Refrescar datos
+        $user = $controller->getById($id);
     } else {
-        try {
-            if (!empty($password)) {
-                $password_hash = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("UPDATE usuarios SET nombre = ?, apellido = ?, correo_electronico = ?, rol_id = ?, password = ?
-WHERE id = ?");
-                $stmt->execute([$nombre, $apellido, $correo, $rol_id, $password_hash, $id]);
-            } else {
-                $stmt = $pdo->prepare("UPDATE usuarios SET nombre = ?, apellido = ?, correo_electronico = ?, rol_id = ? WHERE id = ?");
-                $stmt->execute([$nombre, $apellido, $correo, $rol_id, $id]);
-            }
-            $success = "Usuario actualizado correctamente.";
-
-            // Refrescar datos
-            $stmt_user->execute([$id]);
-            $user = $stmt_user->fetch();
-        } catch (PDOException $e) {
-            if ($e->getCode() == 23000) {
-                $error = "El correo electrónico ya está registrado.";
-            } else {
-                $error = "Error al actualizar el usuario: " . $e->getMessage();
-            }
-        }
+        $error = $result;
     }
 }
 

@@ -2,32 +2,21 @@
 session_start();
 require_once '../app/config/database.php';
 require_once '../app/helpers/auth_helper.php';
+require_once '../app/controllers/PatientsController.php';
 
 checkRole(['administrador', 'recepcionista', 'medico']);
+
+$role = $_SESSION['user_role'] ?? '';
+$isMedico = ($role === 'medico');
+$search = $_GET['search'] ?? '';
+
+$controller = new PatientsController($pdo);
+$pacientes = $controller->index($search, $isMedico);
 
 $pageTitle = 'Pacientes - HospitAll';
 $activePage = 'pacientes';
 $headerTitle = 'Gestión de Pacientes';
 $headerSubtitle = 'Listado y administración de pacientes registrados.';
-
-$isMedico = ($_SESSION['user_role'] === 'medico');
-$search = $_GET['search'] ?? '';
-$pacientes = [];
-
-try {
-    if ($isMedico) {
-        if (!empty($search)) {
-            $stmt = $pdo->prepare("SELECT * FROM pacientes WHERE identificacion = ?");
-            $stmt->execute([$search]);
-            $pacientes = $stmt->fetchAll();
-        }
-    } else {
-        $stmt = $pdo->query("SELECT * FROM pacientes ORDER BY created_at DESC");
-        $pacientes = $stmt->fetchAll();
-    }
-} catch (PDOException $e) {
-    $pacientes = [];
-}
 
 include '../views/layout/header.php';
 ?>

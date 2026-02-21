@@ -2,26 +2,17 @@
 session_start();
 require_once '../app/config/database.php';
 require_once '../app/helpers/auth_helper.php';
+require_once '../app/controllers/AppointmentsController.php';
 
 checkRole(['administrador', 'recepcionista']);
+
+$controller = new AppointmentsController($pdo);
+$citas = $controller->index();
 
 $pageTitle = 'Citas Médicas - HospitAll';
 $activePage = 'citas';
 $headerTitle = 'Gestión de Citas';
 $headerSubtitle = 'Control y seguimiento de citas médicas.';
-
-try {
-    $sql = "SELECT c.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido,
-m.nombre as medico_nombre, m.apellido as medico_apellido, m.especialidad
-FROM citas c
-JOIN pacientes p ON c.paciente_id = p.id
-JOIN medicos m ON c.medico_id = m.id
-ORDER BY c.fecha DESC, c.hora DESC";
-    $stmt = $pdo->query($sql);
-    $citas = $stmt->fetchAll();
-} catch (PDOException $e) {
-    $citas = [];
-}
 
 include '../views/layout/header.php';
 ?>

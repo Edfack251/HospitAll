@@ -2,6 +2,7 @@
 session_start();
 require_once '../app/config/database.php';
 require_once '../app/helpers/auth_helper.php';
+require_once '../app/controllers/PatientsController.php';
 
 checkRole(['administrador', 'recepcionista']);
 
@@ -11,17 +12,8 @@ if (!$id) {
     exit();
 }
 
-try {
-    $stmt = $pdo->prepare("SELECT * FROM pacientes WHERE id = ?");
-    $stmt->execute([$id]);
-    $paciente = $stmt->fetch();
-    if (!$paciente) {
-        header("Location: patients.php");
-        exit();
-    }
-} catch (PDOException $e) {
-    die("Error: " . $e->getMessage());
-}
+$controller = new PatientsController($pdo);
+$paciente = $controller->getById($id);
 
 $pageTitle = 'Editar Paciente - HospitAll';
 $activePage = 'pacientes';

@@ -116,7 +116,7 @@ include '../views/layout/header.php';
                                     <?php echo $l['estado']; ?>
                                 </span>
                                 <?php if ($l['archivo_pdf']): ?>
-                                    <a href="./<?php echo htmlspecialchars($l['archivo_pdf']); ?>" target="_blank"
+                                    <a href="<?php echo htmlspecialchars($l['archivo_pdf']); ?>" target="_blank"
                                         class="text-[#007BFF] hover:text-blue-800" title="Descargar PDF">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path

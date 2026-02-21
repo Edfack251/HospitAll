@@ -2,43 +2,23 @@
 session_start();
 require_once '../app/config/database.php';
 require_once '../app/helpers/auth_helper.php';
+require_once '../app/controllers/UsersController.php';
 
 checkRole(['administrador']);
+
+$controller = new UsersController($pdo);
+$formData = $controller->getFormData(true);
+$roles = $formData['roles'];
 
 $error = null;
 $success = null;
 
-// Obtener roles permitidos para creación manual (excluyendo paciente)
-try {
-    $stmt_roles = $pdo->query("SELECT id, nombre FROM roles WHERE nombre != 'paciente' ORDER BY nombre ASC");
-    $roles = $stmt_roles->fetchAll();
-} catch (PDOException $e) {
-    $roles = [];
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nombre = $_POST['nombre'] ?? '';
-    $apellido = $_POST['apellido'] ?? '';
-    $correo = $_POST['correo_electronico'] ?? '';
-    $password = $_POST['password'] ?? '';
-    $rol_id = $_POST['rol_id'] ?? '';
-
-    if (empty($nombre) || empty($apellido) || empty($correo) || empty($password) || empty($rol_id)) {
-        $error = "Todos los campos son obligatorios.";
+    $result = $controller->create($_POST);
+    if ($result === "Usuario creado correctamente.") {
+        $success = $result;
     } else {
-        try {
-            $password_hash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO usuarios (nombre, apellido, correo_electronico, password, rol_id) VALUES (?, ?, ?, ?,
-?)");
-            $stmt->execute([$nombre, $apellido, $correo, $password_hash, $rol_id]);
-            $success = "Usuario creado correctamente.";
-        } catch (PDOException $e) {
-            if ($e->getCode() == 23000) {
-                $error = "El correo electrónico ya está registrado.";
-            } else {
-                $error = "Error al crear el usuario: " . $e->getMessage();
-            }
-        }
+        $error = $result;
     }
 }
 
