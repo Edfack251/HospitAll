@@ -5,7 +5,21 @@ require_once '../app/helpers/auth_helper.php';
 
 checkRole(['paciente', 'administrador', 'medico']);
 
-$paciente_id = $_GET['patient_id'] ?? $_SESSION['paciente_id'] ?? null;
+$role = $_SESSION['user_role'] ?? '';
+
+if ($role === 'paciente') {
+    // Los pacientes SOLO pueden ver su propia información, ignoramos GET
+    $paciente_id = $_SESSION['paciente_id'] ?? null;
+} elseif (in_array($role, ['administrador', 'medico'])) {
+    // Administradores y médicos pueden usar GET, pero validamos que sea numérico
+    $paciente_id = isset($_GET['patient_id']) && is_numeric($_GET['patient_id'])
+        ? (int) $_GET['patient_id']
+        : null;
+} else {
+    // Otros roles no tienen permiso para ver este portal
+    header("Location: dashboard.php");
+    exit();
+}
 
 if (!$paciente_id) {
     header("Location: dashboard.php");
@@ -17,41 +31,15 @@ $activePage = 'portal';
 $headerTitle = 'Mi Historial Clínico';
 $headerSubtitle = 'Consulta tus diagnósticos, tratamientos y resultados de laboratorio.';
 
-// Obtener citas próximas (Programadas, Confirmadas, En espera)
-try {
-    $stmt_citas = $pdo->prepare("SELECT c.*, m.nombre as medico_nombre, m.apellido as medico_apellido
-FROM citas c
-JOIN medicos m ON c.medico_id = m.id
-WHERE c.paciente_id = ? AND c.estado NOT IN ('Atendida', 'Cancelada', 'No asistió')
-ORDER BY c.fecha ASC, c.hora ASC");
-    $stmt_citas->execute([$paciente_id]);
-    $citas_proximas = $stmt_citas->fetchAll();
+require_once '../app/controllers/PatientPortalController.php';
 
-    // Obtener historial clínico con conteo de órdenes pendientes
-    $stmt_historial = $pdo->prepare("SELECT h.*, m.nombre as medico_nombre, m.apellido as medico_apellido, c.fecha,
-        (SELECT COUNT(*) FROM ordenes_laboratorio ol WHERE ol.historial_id = h.id AND ol.estado = 'Pendiente') as ordenes_pendientes
-FROM historial_clinico h
-JOIN medicos m ON h.medico_id = m.id
-JOIN citas c ON h.cita_id = c.id
-WHERE h.paciente_id = ?
-ORDER BY c.fecha DESC");
-    $stmt_historial->execute([$paciente_id]);
-    $historial = $stmt_historial->fetchAll();
+$controller = new PatientPortalController($pdo);
+$data = $controller->show($paciente_id);
 
-    // Obtener órdenes de laboratorio
-    $stmt_lab = $pdo->prepare("SELECT ol.*, c.fecha
-FROM ordenes_laboratorio ol
-JOIN historial_clinico h ON ol.historial_id = h.id
-JOIN citas c ON h.cita_id = c.id
-WHERE h.paciente_id = ?
-ORDER BY c.fecha DESC");
-    $stmt_lab->execute([$paciente_id]);
-    $laboratorio = $stmt_lab->fetchAll();
-} catch (PDOException $e) {
-    $citas_proximas = [];
-    $historial = [];
-    $laboratorio = [];
-}
+$citas_proximas = $data['citas_proximas'];
+$historial = $data['historial'];
+$laboratorio = $data['laboratorio'];
+
 
 include '../views/layout/header.php';
 ?>

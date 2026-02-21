@@ -5,47 +5,34 @@ require_once '../app/helpers/auth_helper.php';
 
 checkRole(['administrador', 'medico']);
 
-$patient_id = $_GET['id'] ?? null;
+$role = $_SESSION['user_role'] ?? '';
+
+// Esta página ya está protegida por checkRole(['administrador', 'medico'])
+// Pero validamos que el ID venga por GET y sea numérico
+$patient_id = isset($_GET['id']) && is_numeric($_GET['id'])
+    ? (int) $_GET['id']
+    : null;
+
+if (isset($_GET['id']) && !$patient_id) {
+    header("Location: clinical_history.php");
+    exit();
+}
+
 $patient_data = null;
 $history = [];
 $labs = [];
 
+require_once '../app/controllers/ClinicalHistoryController.php';
+
+$controller = new ClinicalHistoryController($pdo);
+
 if ($patient_id) {
-    try {
-        // 1. Obtener datos básicos del paciente
-        $stmt = $pdo->prepare("SELECT * FROM pacientes WHERE id = ?");
-        $stmt->execute([$patient_id]);
-        $patient_data = $stmt->fetch();
-
-        if ($patient_data) {
-            // 2. Obtener historial de consultas
-            $stmt_hist = $pdo->prepare("SELECT h.*, m.nombre as medico_nombre, m.apellido as medico_apellido, c.fecha
-                                       FROM historial_clinico h
-                                       JOIN medicos m ON h.medico_id = m.id
-                                       JOIN citas c ON h.cita_id = c.id
-                                       WHERE h.paciente_id = ?
-                                       ORDER BY c.fecha DESC");
-            $stmt_hist->execute([$patient_id]);
-            $history = $stmt_hist->fetchAll();
-
-            // 3. Obtener órdenes de laboratorio y resultados
-            $stmt_lab = $pdo->prepare("SELECT ol.*, c.fecha as fecha_cita
-                                      FROM ordenes_laboratorio ol
-                                      JOIN historial_clinico h ON ol.historial_id = h.id
-                                      JOIN citas c ON h.cita_id = c.id
-                                      WHERE h.paciente_id = ?
-                                      ORDER BY ol.created_at DESC");
-            $stmt_lab->execute([$patient_id]);
-            $labs = $stmt_lab->fetchAll();
-
-            // Calcular edad
-            $cumpleanos = new DateTime($patient_data['fecha_nacimiento']);
-            $hoy = new DateTime();
-            $patient_data['edad'] = $hoy->diff($cumpleanos)->y;
-        }
-    } catch (PDOException $e) {
-        die("Error: " . $e->getMessage());
-    }
+    $data = $controller->show($patient_id);
+    $patient_data = $data['patient_data'];
+    $history = $data['history'];
+    $labs = $data['labs'];
+} else {
+    $patients = $controller->search();
 }
 
 $pageTitle = 'Historial Clínico - HospitAll';
@@ -76,11 +63,7 @@ include '../views/layout/header.php';
                 </tr>
             </thead>
             <tbody>
-                <?php
-                $stmt = $pdo->query("SELECT p.*, (SELECT MAX(fecha) FROM citas WHERE paciente_id = p.id) as última_cita 
-                                    FROM pacientes p ORDER BY nombre ASC");
-                while ($p = $stmt->fetch()):
-                    ?>
+                <?php foreach ($patients as $p): ?>
                     <tr class="border-b hover:bg-gray-50 transition-colors">
                         <td class="py-4 font-bold text-[#007BFF]">
                             <?php echo htmlspecialchars($p['nombre'] . ' ' . $p['apellido']); ?>
@@ -104,7 +87,7 @@ include '../views/layout/header.php';
                             </a>
                         </td>
                     </tr>
-                <?php endwhile; ?>
+                <?php endforeach; ?>
             </tbody>
         </table>
     </div>
