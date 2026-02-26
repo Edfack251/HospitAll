@@ -37,7 +37,9 @@ class PatientsController
             header("Location: ../patients.php?success=1");
             exit();
         } catch (Exception $e) {
-            die($e->getMessage());
+            error_log("PatientsController::create: " . $e->getMessage());
+            header("Location: ../patients.php?error=1");
+            exit();
         }
     }
 
@@ -48,7 +50,9 @@ class PatientsController
             header("Location: ../patients.php?updated=1");
             exit();
         } catch (Exception $e) {
-            die($e->getMessage());
+            error_log("PatientsController::update: " . $e->getMessage());
+            header("Location: ../patients.php?error=1");
+            exit();
         }
     }
 }

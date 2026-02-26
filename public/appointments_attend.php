@@ -7,9 +7,11 @@ require_once '../app/controllers/AppointmentsController.php';
 
 checkRole(['administrador', 'medico']);
 
-$id = $_GET['id'] ?? '';
+$id = isset($_GET['id']) && is_numeric($_GET['id'])
+    ? (int) $_GET['id']
+    : null;
 
-if (empty($id)) {
+if (!$id) {
     header("Location: appointments.php");
     exit();
 }

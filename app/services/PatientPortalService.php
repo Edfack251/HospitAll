@@ -54,6 +54,7 @@ class PatientPortalService
                 'laboratorio' => $laboratorio
             ];
         } catch (PDOException $e) {
+            error_log("Error PatientPortalService::getPatientPortalData: " . $e->getMessage());
             // En caso de error, retornamos arrays vacíos para no romper la vista
             return [
                 'citas_proximas' => [],

@@ -23,7 +23,7 @@ include '../views/layout/header.php';
     <form action="api/appointments.php" method="POST" class="space-y-6">
         <div>
             <label class="block text-sm font-medium mb-2">Paciente</label>
-            <?php if ($_SESSION['user_role'] === 'Paciente'): ?>
+            <?php if ($_SESSION['user_role'] === 'paciente'): ?>
                 <input type="hidden" name="paciente_id" value="<?php echo $_SESSION['paciente_id']; ?>">
                 <input type="text" readonly value="<?php echo htmlspecialchars($_SESSION['user_name']); ?>"
                     class="w-full px-4 py-2 rounded-lg border bg-gray-50 outline-none shadow-sm">

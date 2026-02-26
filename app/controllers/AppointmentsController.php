@@ -27,7 +27,7 @@ class AppointmentsController
     {
         try {
             $this->service->schedule($data);
-            $redirect = ($_SESSION['user_role'] === 'Paciente') ? '../patient_portal.php?success=1' : '../appointments.php?success=1';
+            $redirect = ($_SESSION['user_role'] === 'paciente') ? '../patient_portal.php?success=1' : '../appointments.php?success=1';
             header("Location: " . $redirect);
             exit();
         } catch (Exception $e) {
@@ -40,6 +40,12 @@ class AppointmentsController
         $cita = $this->service->getById($id);
         if (!$cita) {
             header("Location: dashboard.php?error=cita_no_disponible");
+            exit();
+        }
+
+        // Si es médico, validar que la cita le pertenezca
+        if ($_SESSION['user_role'] === 'medico' && $cita['medico_id'] != $_SESSION['medico_id']) {
+            header("Location: dashboard.php?error=unauthorized");
             exit();
         }
 
@@ -63,6 +69,18 @@ class AppointmentsController
     public function saveAttention($data)
     {
         try {
+            // Asegurar medico_id si el usuario es médico
+            if ($_SESSION['user_role'] === 'medico') {
+                $data['medico_id'] = $_SESSION['medico_id'];
+            }
+
+            // Validar que la cita pertenece al médico
+            $cita = $this->service->getById($data['cita_id']);
+            if (!$cita || $cita['medico_id'] != $data['medico_id']) {
+                header("Location: ../dashboard.php?error=unauthorized");
+                exit();
+            }
+
             $this->service->saveAttention($data);
 
             $redirect = ($_SESSION['user_role'] === 'medico') ? '../doctor_agenda.php' : '../appointments.php';
