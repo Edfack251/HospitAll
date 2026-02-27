@@ -1,6 +1,7 @@
 <?php
 session_start();
-require_once '../../app/config/database.php';
+require_once '../../app/autoload.php';
+$pdo = \App\Config\Database::getConnection();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre = $_POST['nombre'] ?? '';

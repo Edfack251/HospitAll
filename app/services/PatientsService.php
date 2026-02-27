@@ -1,4 +1,10 @@
 <?php
+namespace App\Services;
+
+use Exception;
+use PDO;
+use PDOException;
+use DateTime;
 
 class PatientsService
 {
@@ -91,6 +97,11 @@ class PatientsService
             ]);
 
             $this->pdo->commit();
+
+            // Auditoría: Crear paciente
+            $logService = new LogService($this->pdo);
+            $logService->register($_SESSION['usuario_id'] ?? $usuario_id, 'Registro de paciente', 'Pacientes', "Nombre: $data[nombre] $data[apellido], Cédula: $data[identificacion]", 'INFO');
+
             return true;
         } catch (PDOException $e) {
             if ($this->pdo->inTransaction()) {
@@ -146,6 +157,11 @@ class PatientsService
             ]);
 
             $this->pdo->commit();
+
+            // Auditoría: Editar paciente
+            $logService = new LogService($this->pdo);
+            $logService->register($_SESSION['usuario_id'], 'Edición de paciente', 'Pacientes', "Paciente ID: $id ($data[nombre] $data[apellido])", 'WARNING');
+
             return true;
         } catch (PDOException $e) {
             if ($this->pdo->inTransaction()) {
@@ -156,6 +172,38 @@ class PatientsService
                 throw new Exception("El correo electrónico o la identificación ya están registrados.");
             }
             throw new Exception("Error al actualizar el paciente.");
+        }
+    }
+
+    public function delete($id)
+    {
+        try {
+            $this->pdo->beginTransaction();
+
+            $paciente = $this->getById($id);
+            if (!$paciente)
+                return false;
+
+            $stmt = $this->pdo->prepare("DELETE FROM pacientes WHERE id = ?");
+            $res = $stmt->execute([$id]);
+
+            if ($res) {
+                $stmt_user = $this->pdo->prepare("DELETE FROM usuarios WHERE id = ?");
+                $stmt_user->execute([$paciente['usuario_id']]);
+
+                $this->pdo->commit();
+
+                $logService = new LogService($this->pdo);
+                $logService->register($_SESSION['usuario_id'], 'Eliminación de paciente', 'Pacientes', "ID: $id, Nombre: $paciente[nombre] $paciente[apellido]", 'ERROR');
+            } else {
+                $this->pdo->rollBack();
+            }
+            return $res;
+        } catch (Exception $e) {
+            if ($this->pdo->inTransaction())
+                $this->pdo->rollBack();
+            error_log("Error PatientsService::delete: " . $e->getMessage());
+            return false;
         }
     }
 }

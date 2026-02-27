@@ -1,4 +1,9 @@
 <?php
+namespace App\Services;
+
+use Exception;
+use PDO;
+use DateTime;
 
 class ClinicalHistoryService
 {

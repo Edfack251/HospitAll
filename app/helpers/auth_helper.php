@@ -4,6 +4,19 @@ function checkRole($allowedRoles)
     requireLogin();
 
     if (!in_array($_SESSION['user_role'], $allowedRoles)) {
+        // Auditoría: Intento de acceso no autorizado
+        global $pdo;
+        if (isset($pdo)) {
+            $logService = new LogService($pdo);
+            $logService->register(
+                $_SESSION['user_id'],
+                'Intento acceso no autorizado',
+                'Seguridad',
+                $_SERVER['REQUEST_URI'],
+                'WARNING'
+            );
+        }
+
         header("Location: dashboard.php?error=unauthorized");
         exit();
     }

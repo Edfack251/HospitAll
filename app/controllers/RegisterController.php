@@ -1,4 +1,10 @@
 <?php
+namespace App\Controllers;
+
+use App\Core\ErrorHandler;
+use App\Services\AuthService;
+use Exception;
+
 class RegisterController
 {
     private $pdo;
@@ -28,7 +34,7 @@ class RegisterController
                 header("Location: ../login.php?registered=1");
                 exit();
             } catch (Exception $e) {
-                die("Error en el registro: " . $e->getMessage());
+                ErrorHandler::handle($e);
             }
         }
     }

@@ -1,4 +1,9 @@
 <?php
+namespace App\Services;
+
+use Exception;
+use PDO;
+use PDOException;
 
 class LaboratoryService
 {
@@ -73,7 +78,7 @@ class LaboratoryService
             // Auditoría: Subir resultado laboratorio
             if (isset($_SESSION['usuario_id'])) {
                 $logService = new LogService($this->pdo);
-                $logService->register($_SESSION['usuario_id'], 'Subir resultado PDF', 'Laboratorio', "Orden ID: $orden_id");
+                $logService->register($_SESSION['usuario_id'], 'Subir resultado PDF', 'Laboratorio', "Orden ID: $orden_id", 'WARNING');
             }
 
             return true;

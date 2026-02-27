@@ -1,4 +1,9 @@
 <?php
+namespace App\Services;
+
+use Exception;
+use PDO;
+use PDOException;
 
 class PatientPortalService
 {

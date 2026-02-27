@@ -1,10 +1,13 @@
 <?php
 session_start();
-require_once '../app/config/database.php';
-require_once '../app/helpers/auth_helper.php';
 require_once '../app/autoload.php';
+$pdo = \App\Config\Database::getConnection();
 
-checkRole(['administrador', 'recepcionista', 'medico']);
+
+use App\Controllers\PatientsController;
+use App\Helpers\AuthHelper;
+
+AuthHelper::checkRole(['administrador', 'recepcionista', 'medico']);
 
 $role = $_SESSION['user_role'] ?? '';
 $isMedico = ($role === 'medico');

@@ -1,9 +1,12 @@
 <?php
 session_start();
-require_once '../app/config/database.php';
-require_once '../app/helpers/auth_helper.php';
+require_once '../app/autoload.php';
+$pdo = \App\Config\Database::getConnection();
 
-checkRole(['medico', 'administrador']);
+
+use App\Helpers\AuthHelper;
+
+AuthHelper::checkRole(['medico', 'administrador']);
 
 $medico_id = $_SESSION['medico_id'] ?? null;
 

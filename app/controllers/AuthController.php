@@ -1,4 +1,8 @@
 <?php
+namespace App\Controllers;
+
+use App\Services\AuthService;
+
 class AuthController
 {
     private $pdo;

@@ -1,10 +1,12 @@
 <?php
 session_start();
-require_once '../app/config/database.php';
-require_once '../app/helpers/auth_helper.php';
 require_once '../app/autoload.php';
+$pdo = \App\Config\Database::getConnection();
 
-checkRole(['administrador', 'medico', 'recepcionista', 'tecnico_laboratorio']);
+
+use App\Helpers\AuthHelper;
+
+AuthHelper::checkRole(['administrador', 'medico', 'recepcionista', 'tecnico_laboratorio']);
 
 // Obtener estadísticas reales
 try {
@@ -47,15 +49,21 @@ include '../views/layout/header.php';
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <p class="text-sm font-medium text-[#6C757D]">Citas del Día</p>
-        <p class="text-4xl font-bold text-[#007BFF] mt-2"><?php echo $citasHoy; ?></p>
+        <p class="text-4xl font-bold text-[#007BFF] mt-2">
+            <?php echo $citasHoy; ?>
+        </p>
     </div>
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <p class="text-sm font-medium text-[#6C757D]">Pacientes Totales</p>
-        <p class="text-4xl font-bold text-[#28A745] mt-2"><?php echo $totalPacientes; ?></p>
+        <p class="text-4xl font-bold text-[#28A745] mt-2">
+            <?php echo $totalPacientes; ?>
+        </p>
     </div>
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <p class="text-sm font-medium text-[#6C757D]">Médicos Activos</p>
-        <p class="text-4xl font-bold text-[#6C757D] mt-2"><?php echo $totalMedicos; ?></p>
+        <p class="text-4xl font-bold text-[#6C757D] mt-2">
+            <?php echo $totalMedicos; ?>
+        </p>
     </div>
 </div>
 
@@ -91,11 +99,16 @@ include '../views/layout/header.php';
                                 <?php echo htmlspecialchars($cita['paciente_nombre'] . ' ' . $cita['paciente_apellido']); ?>
                             </td>
                             <td class="py-4 text-[#495057]">
-                                Dr. <?php echo htmlspecialchars($cita['medico_nombre'] . ' ' . $cita['medico_apellido']); ?>
+                                Dr.
+                                <?php echo htmlspecialchars($cita['medico_nombre'] . ' ' . $cita['medico_apellido']); ?>
                             </td>
                             <td class="py-4 text-[#495057]">
-                                <span class="block font-semibold"><?php echo date('d/m/Y', strtotime($cita['fecha'])); ?></span>
-                                <span class="text-xs text-[#6C757D]"><?php echo $cita['hora']; ?></span>
+                                <span class="block font-semibold">
+                                    <?php echo date('d/m/Y', strtotime($cita['fecha'])); ?>
+                                </span>
+                                <span class="text-xs text-[#6C757D]">
+                                    <?php echo $cita['hora']; ?>
+                                </span>
                             </td>
                             <td class="py-4">
                                 <span

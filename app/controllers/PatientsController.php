@@ -1,4 +1,8 @@
 <?php
+namespace App\Controllers;
+
+use App\Services\PatientsService;
+use Exception;
 
 class PatientsController
 {

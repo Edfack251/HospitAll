@@ -1,10 +1,13 @@
 <?php
 session_start();
-require_once '../../app/config/database.php';
 require_once '../../app/autoload.php';
+$pdo = \App\Config\Database::getConnection();
 
-require_once '../../app/helpers/auth_helper.php';
-requireLogin();
+
+use App\Controllers\AppointmentsController;
+use App\Helpers\AuthHelper;
+
+AuthHelper::requireLogin();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $paciente_id = isset($_POST['paciente_id']) && is_numeric($_POST['paciente_id'])

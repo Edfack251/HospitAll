@@ -1,10 +1,12 @@
 <?php
 session_start();
-require_once '../app/config/database.php';
-require_once '../app/helpers/auth_helper.php';
 require_once '../app/autoload.php';
+$pdo = \App\Config\Database::getConnection();
 
-checkRole(['administrador', 'recepcionista']);
+
+use App\Helpers\AuthHelper;
+
+AuthHelper::checkRole(['administrador', 'recepcionista']);
 
 $pageTitle = 'Médicos - HospitAll';
 $activePage = 'medicos';

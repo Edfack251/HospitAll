@@ -1,10 +1,13 @@
 <?php
 session_start();
-require_once '../app/config/database.php';
-require_once '../app/helpers/auth_helper.php';
 require_once '../app/autoload.php';
+$pdo = \App\Config\Database::getConnection();
 
-checkRole(['administrador', 'tecnico_laboratorio']);
+
+use App\Controllers\LaboratoryController;
+use App\Helpers\AuthHelper;
+
+AuthHelper::checkRole(['administrador', 'tecnico_laboratorio']);
 
 $controller = new LaboratoryController($pdo);
 $ordenes = $controller->index();

@@ -1,10 +1,13 @@
 <?php
 session_start();
-require_once '../../app/config/database.php';
 require_once '../../app/autoload.php';
+$pdo = \App\Config\Database::getConnection();
 
-require_once '../../app/helpers/auth_helper.php';
-checkRole(['administrador', 'medico']);
+
+use App\Controllers\AppointmentsController;
+use App\Helpers\AuthHelper;
+
+AuthHelper::checkRole(['administrador', 'medico']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cita_id = isset($_POST['cita_id']) && is_numeric($_POST['cita_id'])

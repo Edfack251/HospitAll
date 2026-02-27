@@ -1,10 +1,13 @@
 <?php
 session_start();
-require_once '../app/config/database.php';
-require_once '../app/helpers/auth_helper.php';
 require_once '../app/autoload.php';
+$pdo = \App\Config\Database::getConnection();
 
-requireLogin();
+
+use App\Controllers\AppointmentsController;
+use App\Helpers\AuthHelper;
+
+AuthHelper::requireLogin();
 
 $controller = new AppointmentsController($pdo);
 $data = $controller->getSchedulingData();

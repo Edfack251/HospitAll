@@ -1,4 +1,9 @@
 <?php
+namespace App\Services;
+
+use Exception;
+use PDO;
+use PDOException;
 
 class AppointmentsService
 {
@@ -110,8 +115,9 @@ class AppointmentsService
             $result = $stmt->execute([$nuevo_estado, $id]);
             if ($result) {
                 // Auditoría: Cambio de estado
+                $nivel = ($nuevo_estado === 'Cancelada') ? 'WARNING' : 'INFO';
                 $logService = new LogService($this->pdo);
-                $logService->register($_SESSION['usuario_id'], 'Cambio de estado', 'Citas', "Cita ID: $id, Nuevo estado: $nuevo_estado");
+                $logService->register($_SESSION['usuario_id'], 'Cambio de estado', 'Citas', "Cita ID: $id, Nuevo estado: $nuevo_estado", $nivel);
             }
             return $result;
         }
@@ -161,13 +167,33 @@ class AppointmentsService
             $this->pdo->commit();
 
             // Auditoría: Guardar atención médica
+            $accion = $historial_existente ? 'Modificación de historial clínico' : 'Guardar atención médica';
+            $nivel = $historial_existente ? 'WARNING' : 'INFO';
+
             $logService = new LogService($this->pdo);
-            $logService->register($_SESSION['usuario_id'], 'Guardar atención médica', 'Citas/Atención', "Cita ID: $data[cita_id], Paciente ID: $data[paciente_id]");
+            $logService->register($_SESSION['usuario_id'], $accion, 'Citas/Atención', "Cita ID: $data[cita_id], Paciente ID: $data[paciente_id]", $nivel);
 
             return true;
         } catch (Exception $e) {
             $this->pdo->rollBack();
             throw $e;
+        }
+    }
+
+    public function delete($id)
+    {
+        try {
+            $stmt = $this->pdo->prepare("DELETE FROM citas WHERE id = ?");
+            $res = $stmt->execute([$id]);
+
+            if ($res) {
+                $logService = new LogService($this->pdo);
+                $logService->register($_SESSION['usuario_id'], 'Eliminación de cita', 'Citas', "ID: $id", 'ERROR');
+            }
+            return $res;
+        } catch (Exception $e) {
+            error_log("Error AppointmentsService::delete: " . $e->getMessage());
+            return false;
         }
     }
 }

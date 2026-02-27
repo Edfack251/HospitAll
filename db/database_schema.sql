@@ -28,6 +28,7 @@ CREATE TABLE pacientes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     usuario_id INT UNIQUE,
     identificacion VARCHAR(20) NOT NULL UNIQUE,
+    identificacion_tipo VARCHAR(50) DEFAULT 'Cédula',
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
     fecha_nacimiento DATE NOT NULL,
@@ -86,15 +87,33 @@ CREATE TABLE ordenes_laboratorio (
     descripcion TEXT,
     estado ENUM('Pendiente', 'Completada') DEFAULT 'Pendiente',
     resultado TEXT,
+    archivo_pdf VARCHAR(255),
     fecha_resultado DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (historial_id) REFERENCES historial_clinico(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Tabla de Auditoría (Logs)
+CREATE TABLE IF NOT EXISTS logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT,
+    accion VARCHAR(100) NOT NULL,
+    modulo VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    ip VARCHAR(45),
+    nivel ENUM('INFO', 'WARNING', 'ERROR') DEFAULT 'INFO',
+    metodo_http VARCHAR(10),
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- Inserción de Roles por defecto
 INSERT INTO roles (nombre, descripcion) VALUES 
 ('Administrador', 'Acceso total al sistema'),
 ('Recepcionista', 'Gestión de citas y pacientes'),
+('Medico', 'Atención médica y agenda'),
+('Tecnico_laboratorio', 'Gestión de órdenes y resultados de laboratorio'),
 ('Paciente', 'Acceso a su portal personal');
 
 -- Usuario administrador inicial (password: admin123 - el hash debe generarse en la app)

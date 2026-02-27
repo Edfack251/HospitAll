@@ -1,4 +1,9 @@
 <?php
+namespace App\Controllers;
+
+use App\Core\ErrorHandler;
+use App\Services\LaboratoryService;
+use Exception;
 
 class LaboratoryController
 {
@@ -21,7 +26,7 @@ class LaboratoryController
             header("Location: ../laboratory.php?success_lab=1");
             exit();
         } catch (Exception $e) {
-            die($e->getMessage());
+            ErrorHandler::handle($e);
         }
     }
 }

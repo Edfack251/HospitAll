@@ -1,4 +1,9 @@
 <?php
+namespace App\Controllers;
+
+use App\Core\ErrorHandler;
+use App\Services\AppointmentsService;
+use Exception;
 
 class AppointmentsController
 {
@@ -30,7 +35,7 @@ class AppointmentsController
             header("Location: " . $redirect);
             exit();
         } catch (Exception $e) {
-            die("Error al agendar la cita: " . $e->getMessage());
+            ErrorHandler::handle($e);
         }
     }
 
@@ -90,7 +95,7 @@ class AppointmentsController
             header("Location: " . $redirect . "?success_atencion=1");
             exit();
         } catch (Exception $e) {
-            die("Error al guardar la atención médica: " . $e->getMessage());
+            ErrorHandler::handle($e);
         }
     }
 }
