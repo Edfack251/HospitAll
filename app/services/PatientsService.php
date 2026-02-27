@@ -100,7 +100,7 @@ class PatientsService
             if ($e->getCode() == 23000) {
                 throw new Exception("El correo electrónico o la identificación ya están registrados.");
             }
-            throw new Exception("Error al guardar el paciente.");
+            throw new Exception("Error al guardar el paciente: " . $e->getMessage());
         }
     }
 

@@ -2,6 +2,7 @@
 session_start();
 require_once '../app/config/database.php';
 require_once '../app/helpers/auth_helper.php';
+require_once '../app/autoload.php';
 
 checkRole(['administrador', 'recepcionista']);
 

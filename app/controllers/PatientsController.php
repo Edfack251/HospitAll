@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/../services/PatientsService.php';
 
 class PatientsController
 {
@@ -38,7 +37,7 @@ class PatientsController
             exit();
         } catch (Exception $e) {
             error_log("PatientsController::create: " . $e->getMessage());
-            header("Location: ../patients.php?error=1");
+            header("Location: ../patients.php?error=1&msg=" . urlencode($e->getMessage()));
             exit();
         }
     }

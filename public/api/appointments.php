@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once '../../app/config/database.php';
-require_once '../../app/controllers/AppointmentsController.php';
+require_once '../../app/autoload.php';
 
 require_once '../../app/helpers/auth_helper.php';
 requireLogin();

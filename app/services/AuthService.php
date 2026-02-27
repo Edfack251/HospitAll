@@ -25,6 +25,11 @@ class AuthService
             $_SESSION['last_activity'] = time();
 
             $this->setSpecificIds($user);
+
+            // Auditoría: Login exitoso
+            $logService = new LogService($this->pdo);
+            $logService->register($user['id'], 'Login exitoso', 'Auth');
+
             return $user;
         }
         return false;
@@ -86,6 +91,11 @@ class AuthService
             ]);
 
             $this->pdo->commit();
+
+            // Auditoría: Nuevo paciente registrado
+            $logService = new LogService($this->pdo);
+            $logService->register($usuario_id, 'Registro de paciente', 'Auth', "Se registró el paciente ID: $data[identificacion]");
+
             return true;
         } catch (Exception $e) {
             if ($this->pdo->inTransaction())

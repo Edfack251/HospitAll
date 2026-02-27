@@ -33,7 +33,7 @@ class LaboratoryService
         }
 
         // Directorio de subida
-        $upload_dir = __DIR__ . '/../../../public/uploads/lab_results/';
+        $upload_dir = __DIR__ . '/../../public/uploads/lab_results/';
 
         if (!is_dir($upload_dir)) {
             if (!mkdir($upload_dir, 0777, true)) {
@@ -69,6 +69,13 @@ class LaboratoryService
                 $stmt = $this->pdo->prepare($sql);
                 $stmt->execute([$resultado, $orden_id]);
             }
+
+            // Auditoría: Subir resultado laboratorio
+            if (isset($_SESSION['usuario_id'])) {
+                $logService = new LogService($this->pdo);
+                $logService->register($_SESSION['usuario_id'], 'Subir resultado PDF', 'Laboratorio', "Orden ID: $orden_id");
+            }
+
             return true;
         } catch (PDOException $e) {
             throw new Exception("Error al guardar el resultado de laboratorio: " . $e->getMessage());

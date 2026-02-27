@@ -107,7 +107,13 @@ class AppointmentsService
 
         if (isset($transiciones[$estado_actual]) && in_array($nuevo_estado, $transiciones[$estado_actual])) {
             $stmt = $this->pdo->prepare("UPDATE citas SET estado = ? WHERE id = ?");
-            return $stmt->execute([$nuevo_estado, $id]);
+            $result = $stmt->execute([$nuevo_estado, $id]);
+            if ($result) {
+                // Auditoría: Cambio de estado
+                $logService = new LogService($this->pdo);
+                $logService->register($_SESSION['usuario_id'], 'Cambio de estado', 'Citas', "Cita ID: $id, Nuevo estado: $nuevo_estado");
+            }
+            return $result;
         }
 
         return false;
@@ -153,6 +159,11 @@ class AppointmentsService
             $stmt_update->execute([$data['cita_id']]);
 
             $this->pdo->commit();
+
+            // Auditoría: Guardar atención médica
+            $logService = new LogService($this->pdo);
+            $logService->register($_SESSION['usuario_id'], 'Guardar atención médica', 'Citas/Atención', "Cita ID: $data[cita_id], Paciente ID: $data[paciente_id]");
+
             return true;
         } catch (Exception $e) {
             $this->pdo->rollBack();

@@ -2,6 +2,7 @@
 session_start();
 require_once '../app/config/database.php';
 require_once '../app/helpers/auth_helper.php';
+require_once '../app/autoload.php';
 
 checkRole(['paciente', 'administrador', 'medico']);
 
@@ -15,6 +16,14 @@ if ($role === 'paciente') {
     $paciente_id = isset($_GET['patient_id']) && is_numeric($_GET['patient_id'])
         ? (int) $_GET['patient_id']
         : null;
+
+    // Validación contextual para médicos
+    if ($role === 'medico') {
+        if (!$paciente_id || $paciente_id !== ($_SESSION['allowed_patient_id'] ?? null)) {
+            header("Location: dashboard.php");
+            exit();
+        }
+    }
 } else {
     // Otros roles no tienen permiso para ver este portal
     header("Location: dashboard.php");
@@ -31,7 +40,6 @@ $activePage = 'portal';
 $headerTitle = 'Mi Historial Clínico';
 $headerSubtitle = 'Consulta tus diagnósticos, tratamientos y resultados de laboratorio.';
 
-require_once '../app/controllers/PatientPortalController.php';
 
 $controller = new PatientPortalController($pdo);
 $data = $controller->show($paciente_id);

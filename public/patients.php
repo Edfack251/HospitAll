@@ -2,7 +2,7 @@
 session_start();
 require_once '../app/config/database.php';
 require_once '../app/helpers/auth_helper.php';
-require_once '../app/controllers/PatientsController.php';
+require_once '../app/autoload.php';
 
 checkRole(['administrador', 'recepcionista', 'medico']);
 
@@ -13,12 +13,38 @@ $search = $_GET['search'] ?? '';
 $controller = new PatientsController($pdo);
 $pacientes = $controller->index($search, $isMedico);
 
+// Control de acceso contextual para médicos
+if ($isMedico && !empty($pacientes)) {
+    $_SESSION['allowed_patient_id'] = $pacientes[0]['id'];
+}
+
 $pageTitle = 'Pacientes - HospitAll';
 $activePage = 'pacientes';
 $headerTitle = 'Gestión de Pacientes';
 $headerSubtitle = 'Listado y administración de pacientes registrados.';
 
 include '../views/layout/header.php';
+
+// Mostrar mensajes de error o éxito
+if (isset($_GET['success'])) {
+    echo '<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-6" role="alert">
+            <strong class="font-bold">¡Éxito!</strong>
+            <span class="block sm:inline"> El paciente ha sido registrado correctamente.</span>
+          </div>';
+}
+if (isset($_GET['updated'])) {
+    echo '<div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative mb-6" role="alert">
+            <strong class="font-bold">¡Actualizado!</strong>
+            <span class="block sm:inline"> Los datos del paciente han sido actualizados.</span>
+          </div>';
+}
+if (isset($_GET['error'])) {
+    $msg = isset($_GET['msg']) ? ': ' . htmlspecialchars($_GET['msg']) : '. Verifique los datos o el registro.';
+    echo '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+            <strong class="font-bold">Error:</strong>
+            <span class="block sm:inline"> No se pudo realizar la operación' . $msg . '</span>
+          </div>';
+}
 ?>
 
 <div class="flex justify-between items-center mb-8">
