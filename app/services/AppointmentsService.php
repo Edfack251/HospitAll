@@ -14,15 +14,24 @@ class AppointmentsService
         $this->pdo = $pdo;
     }
 
-    public function getAll()
+    public function getAll($limit = null, $offset = 0)
     {
-        $sql = "SELECT c.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido,
+        $sql = "SELECT c.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido, p.identificacion as paciente_identificacion, p.id as paciente_id_real,
                 m.nombre as medico_nombre, m.apellido as medico_apellido, m.especialidad
                 FROM citas c
                 JOIN pacientes p ON c.paciente_id = p.id
                 JOIN medicos m ON c.medico_id = m.id
                 ORDER BY c.fecha DESC, c.hora DESC";
-        $stmt = $this->pdo->query($sql);
+
+        if ($limit !== null) {
+            $sql .= " LIMIT :limit OFFSET :offset";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
+            $stmt->execute();
+        } else {
+            $stmt = $this->pdo->query($sql);
+        }
         return $stmt->fetchAll();
     }
 
@@ -117,7 +126,7 @@ class AppointmentsService
                 // Auditoría: Cambio de estado
                 $nivel = ($nuevo_estado === 'Cancelada') ? 'WARNING' : 'INFO';
                 $logService = new LogService($this->pdo);
-                $logService->register($_SESSION['usuario_id'], 'Cambio de estado', 'Citas', "Cita ID: $id, Nuevo estado: $nuevo_estado", $nivel);
+                $logService->register($_SESSION['user_id'], 'Cambio de estado', 'Citas', "Cita ID: $id, Nuevo estado: $nuevo_estado", $nivel);
             }
             return $result;
         }
@@ -128,7 +137,9 @@ class AppointmentsService
     public function saveAttention($data)
     {
         try {
-            $this->pdo->beginTransaction();
+            if (!$this->pdo->inTransaction()) {
+                $this->pdo->beginTransaction();
+            }
 
             $enviar_lab = $data['enviar_lab'];
             $diag_final = $enviar_lab ? "(Pendiente por resultados de laboratorio)" : $data['diagnostico'];
@@ -158,11 +169,44 @@ class AppointmentsService
                     $sql_lab = "INSERT INTO ordenes_laboratorio (historial_id, descripcion, estado) VALUES (?, ?, 'Pendiente')";
                     $stmt_lab = $this->pdo->prepare($sql_lab);
                     $stmt_lab->execute([$historial_id, $data['laboratorio_descripcion']]);
+                    $orden_id = $this->pdo->lastInsertId();
+
+                    // Auto-generación de factura de laboratorio
+                    $billingService = new BillingService($this->pdo);
+                    $billingService->createLaboratoryInvoice($data['paciente_id'], $orden_id, $data['laboratorio_descripcion']);
                 }
             }
 
             $stmt_update = $this->pdo->prepare("UPDATE citas SET estado = 'Atendida' WHERE id = ?");
             $stmt_update->execute([$data['cita_id']]);
+
+            // Auto-generación de factura para cobro en Recepción a través de BillingService
+            if (!$historial_existente) {
+                $billingService = new BillingService($this->pdo);
+                $billingService->createConsultationInvoice($data['paciente_id']);
+            }
+
+            // Manejo de Prescripción Médica (Requisito: Debe poder generarse una prescripción)
+            if (!empty($data['tratamiento']) && !$enviar_lab) {
+                $prescriptionService = new PrescriptionService($this->pdo);
+                // Si ya existe una prescripción para esta cita, podríamos actualizarla o crear una nueva.
+                // Para simplificar el flujo clínico, crearemos una entrada en prescripciones.
+                $prescripData = [
+                    'cita_id' => $data['cita_id'],
+                    'medico_id' => $data['medico_id'],
+                    'paciente_id' => $data['paciente_id'],
+                    'observaciones' => $data['observaciones_clinicas'] ?? '',
+                    'detalles' => [
+                        [
+                            'medicamento_texto' => $data['tratamiento'],
+                            'dosis' => 'Según indicaciones',
+                            'frecuencia' => 'Según indicaciones',
+                            'duracion' => 'Según indicaciones'
+                        ]
+                    ]
+                ];
+                $prescriptionService->create($prescripData);
+            }
 
             $this->pdo->commit();
 
@@ -171,7 +215,7 @@ class AppointmentsService
             $nivel = $historial_existente ? 'WARNING' : 'INFO';
 
             $logService = new LogService($this->pdo);
-            $logService->register($_SESSION['usuario_id'], $accion, 'Citas/Atención', "Cita ID: $data[cita_id], Paciente ID: $data[paciente_id]", $nivel);
+            $logService->register($_SESSION['user_id'], $accion, 'Citas/Atención', "Cita ID: $data[cita_id], Paciente ID: $data[paciente_id]", $nivel);
 
             return true;
         } catch (Exception $e) {
@@ -188,7 +232,7 @@ class AppointmentsService
 
             if ($res) {
                 $logService = new LogService($this->pdo);
-                $logService->register($_SESSION['usuario_id'], 'Eliminación de cita', 'Citas', "ID: $id", 'ERROR');
+                $logService->register($_SESSION['user_id'], 'Eliminación de cita', 'Citas', "ID: $id", 'ERROR');
             }
             return $res;
         } catch (Exception $e) {

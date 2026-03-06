@@ -1,5 +1,8 @@
 <?php
 session_start();
+require_once '../app/autoload.php';
+use App\Helpers\CsrfHelper;
+
 if (isset($_SESSION['user_id'])) {
     header("Location: dashboard.php");
     exit();
@@ -57,6 +60,10 @@ if (isset($_SESSION['user_id'])) {
                 <input type="password" name="password" required
                     class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-[#007BFF] outline-none transition-all">
             </div>
+
+            <?php $csrf = CsrfHelper::generateToken(); ?>
+            <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
+
             <button type="submit" class="primary-btn w-full py-3 rounded-lg text-white font-semibold shadow-md">
                 Iniciar Sesión
             </button>

@@ -15,9 +15,18 @@ class PatientsService
         $this->pdo = $pdo;
     }
 
-    public function getAll()
+    public function getAll($limit = null, $offset = 0)
     {
-        $stmt = $this->pdo->query("SELECT * FROM pacientes ORDER BY created_at DESC");
+        $sql = "SELECT * FROM pacientes ORDER BY created_at DESC";
+        if ($limit !== null) {
+            $sql .= " LIMIT :limit OFFSET :offset";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
+            $stmt->execute();
+        } else {
+            $stmt = $this->pdo->query($sql);
+        }
         return $stmt->fetchAll();
     }
 
@@ -61,7 +70,9 @@ class PatientsService
         }
 
         try {
-            $this->pdo->beginTransaction();
+            if (!$this->pdo->inTransaction()) {
+                $this->pdo->beginTransaction();
+            }
 
             $password_hash = password_hash($data['password'], PASSWORD_DEFAULT);
 
@@ -100,7 +111,7 @@ class PatientsService
 
             // Auditoría: Crear paciente
             $logService = new LogService($this->pdo);
-            $logService->register($_SESSION['usuario_id'] ?? $usuario_id, 'Registro de paciente', 'Pacientes', "Nombre: $data[nombre] $data[apellido], Cédula: $data[identificacion]", 'INFO');
+            $logService->register($_SESSION['user_id'] ?? $usuario_id, 'Registro de paciente', 'Pacientes', "Nombre: $data[nombre] $data[apellido], Cédula: $data[identificacion]", 'INFO');
 
             return true;
         } catch (PDOException $e) {
@@ -118,7 +129,9 @@ class PatientsService
     public function update($id, $data)
     {
         try {
-            $this->pdo->beginTransaction();
+            if (!$this->pdo->inTransaction()) {
+                $this->pdo->beginTransaction();
+            }
 
             // 1. Obtener usuario_id asociado
             $stmt_get_user = $this->pdo->prepare("SELECT usuario_id FROM pacientes WHERE id = ?");
@@ -160,7 +173,7 @@ class PatientsService
 
             // Auditoría: Editar paciente
             $logService = new LogService($this->pdo);
-            $logService->register($_SESSION['usuario_id'], 'Edición de paciente', 'Pacientes', "Paciente ID: $id ($data[nombre] $data[apellido])", 'WARNING');
+            $logService->register($_SESSION['user_id'], 'Edición de paciente', 'Pacientes', "Paciente ID: $id ($data[nombre] $data[apellido])", 'WARNING');
 
             return true;
         } catch (PDOException $e) {
@@ -178,7 +191,9 @@ class PatientsService
     public function delete($id)
     {
         try {
-            $this->pdo->beginTransaction();
+            if (!$this->pdo->inTransaction()) {
+                $this->pdo->beginTransaction();
+            }
 
             $paciente = $this->getById($id);
             if (!$paciente)
@@ -194,7 +209,7 @@ class PatientsService
                 $this->pdo->commit();
 
                 $logService = new LogService($this->pdo);
-                $logService->register($_SESSION['usuario_id'], 'Eliminación de paciente', 'Pacientes', "ID: $id, Nombre: $paciente[nombre] $paciente[apellido]", 'ERROR');
+                $logService->register($_SESSION['user_id'], 'Eliminación de paciente', 'Pacientes', "ID: $id, Nombre: $paciente[nombre] $paciente[apellido]", 'ERROR');
             } else {
                 $this->pdo->rollBack();
             }

@@ -6,7 +6,7 @@ $pdo = \App\Config\Database::getConnection();
 
 use App\Helpers\AuthHelper;
 
-AuthHelper::checkRole(['administrador', 'recepcionista']);
+AuthHelper::checkRole(['administrador']);
 
 $pageTitle = 'Médicos - HospitAll';
 $activePage = 'medicos';

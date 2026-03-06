@@ -1,3 +1,7 @@
+<?php
+require_once '../app/autoload.php';
+use App\Helpers\CsrfHelper;
+?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -40,6 +44,8 @@
         </div>
 
         <form action="api/register.php" method="POST" class="grid grid-cols-2 gap-4">
+            <?php $csrf = CsrfHelper::generateToken(); ?>
+            <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
             <div class="col-span-1">
                 <label class="block text-sm font-medium mb-1">Tipo de Identificación</label>
                 <select name="identificacion_tipo" id="idType" required

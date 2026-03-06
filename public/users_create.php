@@ -6,6 +6,7 @@ $pdo = \App\Config\Database::getConnection();
 
 use App\Controllers\UsersController;
 use App\Helpers\AuthHelper;
+use App\Helpers\CsrfHelper;
 
 AuthHelper::checkRole(['administrador']);
 
@@ -17,6 +18,10 @@ $error = null;
 $success = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!CsrfHelper::validateToken($_POST['csrf_token'] ?? null)) {
+        http_response_code(403);
+        die("Token CSRF inválido.");
+    }
     $result = $controller->create($_POST);
     if ($result === "Usuario creado correctamente.") {
         $success = $result;
@@ -60,6 +65,8 @@ include '../views/layout/header.php';
     <?php endif; ?>
 
     <form method="POST" class="space-y-6">
+        <?php $csrf = CsrfHelper::generateToken(); ?>
+        <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label class="block text-sm font-medium mb-2 text-[#495057]">Nombre</label>

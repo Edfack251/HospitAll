@@ -110,7 +110,7 @@ if (isset($_GET['error'])) {
                             <?php echo htmlspecialchars($paciente['nombre'] . ' ' . $paciente['apellido']); ?>
                         </td>
                         <td class="py-4 text-[#6C757D]">
-                            <?php echo htmlspecialchars($paciente['identificacion']); ?>
+                            <?php echo htmlspecialchars(\App\Helpers\PrivacyHelper::maskCedula($paciente['identificacion'], $paciente['id'])); ?>
                         </td>
                         <td class="py-4 text-[#6C757D]">
                             <?php echo htmlspecialchars($paciente['telefono'] ?: '-'); ?>

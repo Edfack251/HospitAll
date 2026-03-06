@@ -46,9 +46,9 @@
             <p class="text-[#6C757D] mt-4">Ha ocurrido un error inesperado.</p>
         </div>
 
-        <a href="/public/dashboard.php"
+        <a href="javascript:history.back()"
             class="primary-btn inline-block w-full py-3 rounded-lg text-white font-semibold shadow-md">
-            Volver al Dashboard
+            Volver
         </a>
 
         <div class="mt-6 text-sm text-[#6C757D]">

@@ -55,7 +55,9 @@ class AuthService
     public function registerPatient($data)
     {
         try {
-            $this->pdo->beginTransaction();
+            if (!$this->pdo->inTransaction()) {
+                $this->pdo->beginTransaction();
+            }
 
             $password_hash = password_hash($data['password'], PASSWORD_DEFAULT);
 

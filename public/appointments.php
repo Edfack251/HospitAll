@@ -6,6 +6,7 @@ $pdo = \App\Config\Database::getConnection();
 
 use App\Controllers\AppointmentsController;
 use App\Helpers\AuthHelper;
+use App\Helpers\CsrfHelper;
 
 AuthHelper::checkRole(['administrador', 'recepcionista']);
 
@@ -42,8 +43,14 @@ include '../views/layout/header.php';
         <tbody>
             <?php foreach ($citas as $cita): ?>
                 <tr class="border-b hover:bg-gray-50 transition-colors">
-                    <td class="py-4 font-medium">
-                        <?php echo htmlspecialchars($cita['paciente_nombre'] . ' ' . $cita['paciente_apellido']); ?>
+                    <td class="py-4">
+                        <div class="font-medium">
+                            <?php echo htmlspecialchars($cita['paciente_nombre'] . ' ' . $cita['paciente_apellido']); ?>
+                        </div>
+                        <div class="text-xs text-[#6C757D]">
+                            Cédula:
+                            <?php echo htmlspecialchars(\App\Helpers\PrivacyHelper::maskCedula($cita['paciente_identificacion'] ?? '', $cita['paciente_id_real'] ?? null)); ?>
+                        </div>
                     </td>
                     <td class="py-4">
                         <div class="text-sm font-semibold">
@@ -105,6 +112,8 @@ include '../views/layout/header.php';
                             <?php endif; ?>
 
                             <form action="appointments_status_update.php" method="POST" class="inline">
+                                <?php $csrf = CsrfHelper::generateToken(); ?>
+                                <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
                                 <input type="hidden" name="id" value="<?php echo $cita['id']; ?>">
                                 <select name="nuevo_estado" onchange="this.form.submit()"
                                     class="text-xs border rounded p-1 outline-none">

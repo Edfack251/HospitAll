@@ -41,7 +41,13 @@ if (!$paciente_id) {
 $pageTitle = 'Mi Portal - HospitAll';
 $activePage = 'portal';
 $headerTitle = 'Mi Historial Clínico';
-$headerSubtitle = 'Consulta tus diagnósticos, tratamientos y resultados de laboratorio.';
+
+$stmt_pac = $pdo->prepare("SELECT identificacion, id FROM pacientes WHERE id = ?");
+$stmt_pac->execute([$paciente_id]);
+$pac_datos = $stmt_pac->fetch();
+$cedula_mask = \App\Helpers\PrivacyHelper::maskCedula($pac_datos['identificacion'] ?? '', $pac_datos['id'] ?? null);
+
+$headerSubtitle = 'Consulta tus diagnósticos y laboratorio. Cédula: ' . $cedula_mask;
 
 
 $controller = new PatientPortalController($pdo);
@@ -50,6 +56,7 @@ $data = $controller->show($paciente_id);
 $citas_proximas = $data['citas_proximas'];
 $historial = $data['historial'];
 $laboratorio = $data['laboratorio'];
+$prescripciones = $data['prescripciones'];
 
 
 include '../views/layout/header.php';
@@ -125,6 +132,33 @@ include '../views/layout/header.php';
                                     </a>
                                 <?php endif; ?>
                             </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Prescripciones Médicas -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-bold text-[#721C24] mb-6">Recetas Médicas</h3>
+            <?php if (empty($prescripciones)): ?>
+                <p class="text-[#6C757D] text-sm text-center py-4">No hay recetas emitidas.</p>
+            <?php else: ?>
+                <div class="space-y-3">
+                    <?php foreach ($prescripciones as $p): ?>
+                        <div class="p-3 bg-red-50 border border-red-100 rounded-xl">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-xs font-bold text-[#721C24]">
+                                    <?php echo date('d/m/Y', strtotime($p['fecha'])); ?>
+                                </span>
+                                <span class="text-[10px] bg-white px-2 py-0.5 rounded-full border text-[#721C24] font-bold">
+                                    <?php echo $p['estado']; ?>
+                                </span>
+                            </div>
+                            <p class="text-[11px] font-medium text-gray-700">Dr.
+                                <?php echo htmlspecialchars($p['medico_nombre'] . ' ' . $p['medico_apellido']); ?></p>
+                            <a href="#" class="text-[10px] text-[#721C24] font-bold mt-2 inline-block hover:underline">VER
+                                DETALLES</a>
                         </div>
                     <?php endforeach; ?>
                 </div>

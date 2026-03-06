@@ -53,10 +53,21 @@ class PatientPortalService
             $stmt_lab->execute([$paciente_id]);
             $laboratorio = $stmt_lab->fetchAll();
 
+            // 4. Obtener prescripciones médicas
+            $stmt_prescrip = $this->pdo->prepare("SELECT p.*, m.nombre as medico_nombre, m.apellido as medico_apellido, c.fecha
+                FROM prescripciones p
+                JOIN medicos m ON p.medico_id = m.id
+                JOIN citas c ON p.cita_id = c.id
+                WHERE p.paciente_id = ?
+                ORDER BY c.fecha DESC");
+            $stmt_prescrip->execute([$paciente_id]);
+            $prescripciones = $stmt_prescrip->fetchAll();
+
             return [
                 'citas_proximas' => $citas_proximas,
                 'historial' => $historial,
-                'laboratorio' => $laboratorio
+                'laboratorio' => $laboratorio,
+                'prescripciones' => $prescripciones
             ];
         } catch (PDOException $e) {
             error_log("Error PatientPortalService::getPatientPortalData: " . $e->getMessage());
@@ -64,7 +75,8 @@ class PatientPortalService
             return [
                 'citas_proximas' => [],
                 'historial' => [],
-                'laboratorio' => []
+                'laboratorio' => [],
+                'prescripciones' => []
             ];
         }
     }

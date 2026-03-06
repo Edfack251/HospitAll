@@ -3,40 +3,18 @@ session_start();
 require_once '../app/autoload.php';
 $pdo = \App\Config\Database::getConnection();
 
-
+use App\Controllers\DashboardController;
 use App\Helpers\AuthHelper;
 
-AuthHelper::checkRole(['administrador', 'medico', 'recepcionista', 'tecnico_laboratorio']);
+AuthHelper::checkRole(['administrador', 'medico', 'recepcionista', 'tecnico_laboratorio', 'farmaceutico']);
 
-// Obtener estadísticas reales
-try {
-    $stmtPacientes = $pdo->query("SELECT COUNT(*) FROM pacientes");
-    $totalPacientes = $stmtPacientes->fetchColumn();
+$controller = new DashboardController($pdo);
+$data = $controller->index();
 
-    $stmtMedicos = $pdo->query("SELECT COUNT(*) FROM medicos");
-    $totalMedicos = $stmtMedicos->fetchColumn();
-
-    $stmtCitas = $pdo->prepare("SELECT COUNT(*) FROM citas WHERE fecha = CURDATE()");
-    $stmtCitas->execute();
-    $citasHoy = $stmtCitas->fetchColumn();
-
-    // Obtener las próximas 10 citas programadas
-    $stmtProximas = $pdo->prepare("SELECT c.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido, m.nombre as
-medico_nombre, m.apellido as medico_apellido
-FROM citas c
-JOIN pacientes p ON c.paciente_id = p.id
-JOIN medicos m ON c.medico_id = m.id
-WHERE c.estado = 'Programada'
-ORDER BY c.fecha ASC, c.hora ASC
-LIMIT 10");
-    $stmtProximas->execute();
-    $proximasCitas = $stmtProximas->fetchAll();
-} catch (PDOException $e) {
-    $totalPacientes = 0;
-    $totalMedicos = 0;
-    $citasHoy = 0;
-    $proximasCitas = [];
-}
+$totalPacientes = $data['totalPacientes'];
+$totalMedicos = $data['totalMedicos'];
+$citasHoy = $data['citasHoy'];
+$proximasCitas = $data['proximasCitas'];
 
 $pageTitle = 'Dashboard - HospitAll';
 $activePage = 'dashboard';
@@ -47,31 +25,33 @@ include '../views/layout/header.php';
 
 <!-- Stats Grid -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <p class="text-sm font-medium text-[#6C757D]">Citas del Día</p>
-        <p class="text-4xl font-bold text-[#007BFF] mt-2">
+    <div class="glass-card p-8 rounded-2xl shadow-sm border border-blue-50">
+        <p class="text-sm font-bold text-gray-400 uppercase tracking-wider">Citas del Día</p>
+        <p class="text-5xl font-extrabold gradient-text mt-4">
             <?php echo $citasHoy; ?>
         </p>
     </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <p class="text-sm font-medium text-[#6C757D]">Pacientes Totales</p>
-        <p class="text-4xl font-bold text-[#28A745] mt-2">
+    <div class="glass-card p-8 rounded-2xl shadow-sm border border-green-50">
+        <p class="text-sm font-bold text-gray-400 uppercase tracking-wider">Pacientes Totales</p>
+        <p class="text-5xl font-extrabold text-[#28A745] mt-4">
             <?php echo $totalPacientes; ?>
         </p>
     </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <p class="text-sm font-medium text-[#6C757D]">Médicos Activos</p>
-        <p class="text-4xl font-bold text-[#6C757D] mt-2">
+    <div class="glass-card p-8 rounded-2xl shadow-sm border border-gray-100">
+        <p class="text-sm font-bold text-gray-400 uppercase tracking-wider">Médicos Activos</p>
+        <p class="text-5xl font-extrabold text-gray-600 mt-4">
             <?php echo $totalMedicos; ?>
         </p>
     </div>
 </div>
 
 <!-- Recent Activity -->
-<div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-    <div class="flex justify-between items-center mb-6">
-        <h3 class="text-xl font-bold">Próximas Citas</h3>
-        <a href="appointments.php" class="text-[#007BFF] text-sm font-semibold hover:underline">Ver todas</a>
+<div class="glass-card p-10 rounded-2xl shadow-sm border border-gray-100">
+    <div class="flex justify-between items-center mb-8">
+        <h3 class="text-2xl font-bold gradient-text">Próximas Citas</h3>
+        <a href="appointments.php"
+            class="text-blue-600 text-sm font-bold hover:underline bg-blue-50 px-4 py-2 rounded-full transition">Ver
+            todas</a>
     </div>
 
     <?php if (empty($proximasCitas)): ?>

@@ -6,6 +6,7 @@ $pdo = \App\Config\Database::getConnection();
 
 use App\Controllers\AppointmentsController;
 use App\Helpers\AuthHelper;
+use App\Helpers\CsrfHelper;
 
 AuthHelper::checkRole(['administrador', 'medico']);
 
@@ -104,6 +105,8 @@ include '../views/layout/header.php';
     <div class="md:col-span-2 space-y-6">
         <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
             <form action="api/appointments_save_attention.php" method="POST" class="space-y-6">
+                <?php $csrf = CsrfHelper::generateToken(); ?>
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
                 <input type="hidden" name="cita_id" value="<?php echo $cita['id']; ?>">
                 <input type="hidden" name="paciente_id" value="<?php echo $cita['paciente_id']; ?>">
                 <input type="hidden" name="medico_id" value="<?php echo $cita['medico_id']; ?>">

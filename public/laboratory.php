@@ -6,8 +6,9 @@ $pdo = \App\Config\Database::getConnection();
 
 use App\Controllers\LaboratoryController;
 use App\Helpers\AuthHelper;
+use App\Helpers\CsrfHelper;
 
-AuthHelper::checkRole(['administrador', 'tecnico_laboratorio']);
+AuthHelper::checkRole(['administrador', 'tecnico_laboratorio', 'recepcionista']);
 
 $controller = new LaboratoryController($pdo);
 $ordenes = $controller->index();
@@ -43,7 +44,7 @@ $completadas = array_filter($ordenes, function ($o) {
 </div>
 
 <!-- Sección Pendientes -->
-<div id="tab-pendientes" class="tab-content bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+<div id="tab-pendientes" class="tab-content glass-card p-8 rounded-2xl shadow-sm">
     <?php if (empty($pendientes)): ?>
         <div class="text-center py-12">
             <div class="bg-blue-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -81,12 +82,29 @@ $completadas = array_filter($ordenes, function ($o) {
                                 <?php echo htmlspecialchars(substr($o['diagnostico'], 0, 40)) . '...'; ?>
                             </div>
                         </td>
-                        <td class="py-4">
-                            <button
-                                onclick="openResultModal(<?php echo $o['id']; ?>, '<?php echo htmlspecialchars($o['paciente_nombre'] . ' ' . $o['paciente_apellido']); ?>')"
-                                class="text-xs bg-[#007BFF] text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors">
-                                Cargar Resultados
-                            </button>
+                        <td class="py-4 space-y-2">
+                            <?php if (in_array($_SESSION['user_role'], ['administrador', 'recepcionista'])): ?>
+                                <form action="api/laboratory_bill_api.php" method="POST">
+                                    <?php $csrf_lab = \App\Helpers\CsrfHelper::generateToken(); ?>
+                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_lab; ?>">
+                                    <input type="hidden" name="orden_id" value="<?php echo $o['id']; ?>">
+                                    <input type="hidden" name="paciente_id" value="<?php echo $o['paciente_id_real']; ?>">
+                                    <input type="hidden" name="descripcion"
+                                        value="<?php echo htmlspecialchars($o['descripcion']); ?>">
+                                    <button type="submit"
+                                        class="text-xs bg-[#28A745] text-white px-3 py-2 rounded hover:bg-green-700 transition-colors w-full font-bold shadow-sm">
+                                        Cobrar Análisis
+                                    </button>
+                                </form>
+                            <?php endif; ?>
+
+                            <?php if (in_array($_SESSION['user_role'], ['administrador', 'tecnico_laboratorio'])): ?>
+                                <button
+                                    onclick="openResultModal(<?php echo $o['id']; ?>, '<?php echo htmlspecialchars($o['paciente_nombre'] . ' ' . $o['paciente_apellido']); ?>')"
+                                    class="text-xs bg-[#007BFF] text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors w-full font-bold shadow-sm">
+                                    Cargar Resultados
+                                </button>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -96,7 +114,7 @@ $completadas = array_filter($ordenes, function ($o) {
 </div>
 
 <!-- Sección Completadas -->
-<div id="tab-completadas" class="tab-content hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+<div id="tab-completadas" class="tab-content hidden glass-card p-8 rounded-2xl shadow-sm">
     <?php if (empty($completadas)): ?>
         <p class="text-center text-gray-400 py-12">No hay órdenes completadas aún.</p>
     <?php else: ?>
@@ -127,9 +145,11 @@ $completadas = array_filter($ordenes, function ($o) {
                                     <a href="<?php echo htmlspecialchars($o['archivo_pdf']); ?>" target="_blank"
                                         class="text-xs bg-blue-50 text-[#007BFF] px-3 py-2 rounded hover:bg-blue-100 font-bold border border-blue-200">PDF</a>
                                 <?php endif; ?>
-                                <button
-                                    onclick="openResultModal(<?php echo $o['id']; ?>, '<?php echo htmlspecialchars($o['paciente_nombre'] . ' ' . $o['paciente_apellido']); ?>', '<?php echo htmlspecialchars($o['resultado']); ?>')"
-                                    class="text-xs bg-amber-50 text-amber-600 px-3 py-2 rounded hover:bg-amber-100 font-bold border border-amber-200">Corregir</button>
+                                <?php if (in_array($_SESSION['user_role'], ['administrador', 'tecnico_laboratorio'])): ?>
+                                    <button
+                                        onclick="openResultModal(<?php echo $o['id']; ?>, '<?php echo htmlspecialchars($o['paciente_nombre'] . ' ' . $o['paciente_apellido']); ?>', '<?php echo htmlspecialchars($o['resultado']); ?>')"
+                                        class="text-xs bg-amber-50 text-amber-600 px-3 py-2 rounded hover:bg-amber-100 font-bold border border-amber-200">Corregir</button>
+                                <?php endif; ?>
                             </div>
                         </td>
                     </tr>
@@ -140,12 +160,15 @@ $completadas = array_filter($ordenes, function ($o) {
 </div>
 
 <!-- Modal para cargar resultados -->
-<div id="resultModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg mx-4">
-        <h3 class="text-xl font-bold mb-4">Cargar Resultados</h3>
-        <p class="text-sm text-gray-600 mb-6" id="modalPacienteName"></p>
+<div id="resultModal"
+    class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all">
+    <div class="glass-card p-10 rounded-3xl shadow-2xl w-full max-w-lg mx-auto border-white/40">
+        <h3 class="text-2xl font-bold gradient-text mb-2">Cargar Resultados</h3>
+        <p class="text-xs text-gray-500 font-medium mb-8 uppercase tracking-wide" id="modalPacienteName"></p>
 
-        <form action="api/laboratory_upload_result.php" method="POST" enctype="multipart/form-data" class="space-y-4">
+        <form action="api/laboratory_upload_result.php" method="POST" enctype="multipart/form-data" class="space-y-6">
+            <?php $csrf = CsrfHelper::generateToken(); ?>
+            <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
             <input type="hidden" name="orden_id" id="modalOrdenId">
             <div>
                 <label class="block text-sm font-semibold mb-2">Detalle del Resultado (Texto)</label>

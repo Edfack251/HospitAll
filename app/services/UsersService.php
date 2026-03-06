@@ -14,12 +14,22 @@ class UsersService
         $this->pdo = $pdo;
     }
 
-    public function getAll()
+    public function getAll($limit = null, $offset = 0)
     {
-        $stmt = $this->pdo->query("SELECT u.id, u.nombre, u.apellido, u.correo_electronico, r.nombre as rol_nombre, u.created_at 
-                             FROM usuarios u 
-                             LEFT JOIN roles r ON u.rol_id = r.id 
-                             ORDER BY u.created_at DESC");
+        $sql = "SELECT u.id, u.nombre, u.apellido, u.correo_electronico, r.nombre as rol_nombre, u.created_at 
+                FROM usuarios u 
+                LEFT JOIN roles r ON u.rol_id = r.id 
+                ORDER BY u.created_at DESC";
+
+        if ($limit !== null) {
+            $sql .= " LIMIT :limit OFFSET :offset";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
+            $stmt->execute();
+        } else {
+            $stmt = $this->pdo->query($sql);
+        }
         return $stmt->fetchAll();
     }
 
@@ -56,7 +66,7 @@ class UsersService
 
             // Auditoría: Crear usuario
             $logService = new LogService($this->pdo);
-            $logService->register($_SESSION['usuario_id'] ?? $new_user_id, 'Creación de usuario', 'Usuarios', "Email: $data[correo_electronico], Rol ID: $data[rol_id]", 'INFO');
+            $logService->register($_SESSION['user_id'] ?? $new_user_id, 'Creación de usuario', 'Usuarios', "Email: $data[correo_electronico], Rol ID: $data[rol_id]", 'INFO');
 
             return true;
         } catch (PDOException $e) {
@@ -87,7 +97,7 @@ class UsersService
 
                 // Si el rol cambió, nivel WARNING
                 // Nota: Podríamos consultar el rol anterior para comparar, pero por simplicidad logguamos la edición
-                $logService->register($_SESSION['usuario_id'], 'Edición de usuario', 'Usuarios', "Usuario ID: $id ($data[correo_electronico])", 'WARNING');
+                $logService->register($_SESSION['user_id'], 'Edición de usuario', 'Usuarios', "Usuario ID: $id ($data[correo_electronico])", 'WARNING');
             }
 
             return $res;
@@ -102,7 +112,7 @@ class UsersService
     public function delete($id)
     {
         try {
-            if ($id == ($_SESSION['usuario_id'] ?? 0)) {
+            if ($id == ($_SESSION['user_id'] ?? 0)) {
                 throw new Exception("No puedes eliminar tu propia cuenta.");
             }
 
@@ -115,7 +125,7 @@ class UsersService
 
             if ($res) {
                 $logService = new LogService($this->pdo);
-                $logService->register($_SESSION['usuario_id'], 'Eliminación de usuario', 'Usuarios', "ID: $id, Email: $user[correo_electronico]", 'ERROR');
+                $logService->register($_SESSION['user_id'], 'Eliminación de usuario', 'Usuarios', "ID: $id, Email: $user[correo_electronico]", 'ERROR');
             }
             return $res;
         } catch (Exception $e) {

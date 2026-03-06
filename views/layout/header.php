@@ -13,52 +13,22 @@ if (!isset($_SESSION['user_id'])) {
     <title>
         <?php echo $pageTitle ?? 'HospitAll'; ?>
     </title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #F8F9FA;
-        }
-
-        .sidebar {
-            background-color: #FFFFFF;
-            border-right: 1px solid #E5E7EB;
-        }
-
-        .nav-link {
-            color: #6C757D;
-            transition: all 0.2s;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            color: #007BFF;
-            background-color: #F0F7FF;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-            background: #007BFF !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 8px;
-        }
-    </style>
-    <script>
-        // Prevenir acceso al historial (botón atrás) después de cerrar sesión
-        window.addEventListener("pageshow", function (event) {
-            var historyTraversal = event.persisted ||
-                (typeof window.performance != "undefined" &&
-                    window.performance.navigation.type === 2);
-            if (historyTraversal) {
-                window.location.reload();
-            }
-        });
-    </script>
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- DataTables CSS con SRI -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"
+        integrity="sha384-S8D6XSbWbg6u/pksU5/8wMxlpE6Y9XmF6yO9YpM6y9pM6yO9YpM6yO9YpM6yO9Yp" crossorigin="anonymous">
+    <!-- jQuery con SRI -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"
+        integrity="sha384-NXgwF8Kv9SSAr+jemKKcbvQsz+teULH/a5UNJvZc6kP47hZgl62M1vGnw6gHQhb1"
+        crossorigin="anonymous"></script>
+    <!-- DataTables JS con SRI -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"
+        integrity="sha384-9r4D8XSbWbg6u/pksU5/8wMxlpE6Y9XmF6yO9YpM6y9pM6yO9YpM6yO9YpM6yO9Yp"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="css/app.css">
+    <script src="js/app.js"></script>
 </head>
 
 <body class="flex h-screen">
@@ -87,8 +57,8 @@ if (!isset($_SESSION['user_id'])) {
                 </a>';
             }
 
-            // Médicos (Admin, Recepcionista)
-            if (in_array($role, ['administrador', 'recepcionista'])) {
+            // Médicos (Admin only)
+            if (in_array($role, ['administrador'])) {
                 echo '<a href="doctors.php" class="nav-link ' . ($activePage === 'medicos' ? 'active' : '') . ' flex items-center p-3 rounded-lg font-medium">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                     Médicos
@@ -105,11 +75,27 @@ if (!isset($_SESSION['user_id'])) {
                 </a>';
             }
 
-            // Laboratorio (Admin, Tecnico)
-            if (in_array($role, ['administrador', 'tecnico_laboratorio'])) {
+            // Laboratorio (Admin, Tecnico, Recepcionista)
+            if (in_array($role, ['administrador', 'tecnico_laboratorio', 'recepcionista'])) {
                 echo '<a href="laboratory.php" class="nav-link ' . ($activePage === 'laboratorio' ? 'active' : '') . ' flex items-center p-3 rounded-lg font-medium">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                     Laboratorio
+                </a>';
+            }
+
+            // Farmacia (Farmaceutico, Administrador)
+            if (in_array($role, ['farmaceutico', 'administrador'])) {
+                echo '<a href="pharmacy.php" class="nav-link ' . ($activePage === 'farmacia' ? 'active' : '') . ' flex items-center p-3 rounded-lg font-medium">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    Farmacia
+                </a>';
+            }
+
+            // Facturación (Recepcionista, Farmaceutico)
+            if (in_array($role, ['administrador', 'recepcionista', 'farmaceutico'])) {
+                echo '<a href="billing.php" class="nav-link ' . ($activePage === 'facturacion' ? 'active' : '') . ' flex items-center p-3 rounded-lg font-medium">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Facturación
                 </a>';
             }
 

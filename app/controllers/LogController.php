@@ -18,7 +18,7 @@ class LogController
     public function index()
     {
         $filters = [
-            'usuario_id' => $_GET['usuario_id'] ?? null,
+            'user_id' => $_GET['user_id'] ?? null,
             'modulo' => $_GET['modulo'] ?? null,
             'fecha_desde' => $_GET['fecha_desde'] ?? null,
             'fecha_hasta' => $_GET['fecha_hasta'] ?? null

@@ -5,6 +5,7 @@ $pdo = \App\Config\Database::getConnection();
 
 
 use App\Helpers\AuthHelper;
+use App\Helpers\CsrfHelper;
 
 AuthHelper::checkRole(['administrador']);
 
@@ -36,6 +37,8 @@ include '../views/layout/header.php';
 
 <div class="max-w-2xl bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
     <form action="api/doctors_edit.php" method="POST" class="grid grid-cols-2 gap-6">
+        <?php $csrf = CsrfHelper::generateToken(); ?>
+        <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
         <input type="hidden" name="id" value="<?php echo $medico['id']; ?>">
         <div class="col-span-1">
             <label class="block text-sm font-medium mb-2">Nombre</label>
