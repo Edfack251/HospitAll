@@ -1,0 +1,9 @@
+RewriteEngine On
+RewriteBase "/HospitAll V1/public/"
+
+# Si la petición es un archivo o directorio existente (ej. css, js, imgs) no lo redirija
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Si no existe, redirigir a index.php
+RewriteRule ^(.*)$ index.php [QSA,L]

@@ -1,0 +1,4 @@
+[2026-02-27 13:05:23] ERROR: Prueba controlada de ErrorHandler in C:\HospitAll V1\public\test_error.php on line 7
+[2026-03-05 19:44:20] ERROR: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it in C:\HospitAll V1\app\Config\Database.php on line 31
+[2026-03-12 07:57:19] ERROR: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it in C:\HospitAll V1\app\Config\Database.php on line 31
+[2026-03-12 07:57:28] ERROR: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it in C:\HospitAll V1\app\Config\Database.php on line 31
