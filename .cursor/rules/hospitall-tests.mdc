@@ -1,0 +1,42 @@
+---
+description: HospitAll test workflow - run PHPUnit after code changes and fix failures
+alwaysApply: true
+---
+
+# HospitAll test workflow
+
+## After any code modification
+
+Whenever you modify Controllers, Services, Repositories, Policies, Helpers, or Config:
+
+1. **Run tests automatically**:
+   ```
+   C:\xampp\php\php.exe vendor\bin\phpunit
+   ```
+
+2. **If OK**: Confirm changes did not break existing functionality.
+
+3. **If FAIL**:
+   - Analyze the PHPUnit error output
+   - Identify file and line causing the failure
+   - Determine cause: logic error, contract change, repository error, service error, or test issue
+   - Apply the minimum fix required
+   - Re-run tests until they pass
+
+4. **Never introduce changes that break existing tests.**
+
+5. **If a test fails because expected behavior changed legitimately**:
+   - Explain why the test is no longer valid
+   - Propose the correct test update
+
+6. **Preserve compatibility** with: Soft Delete, PolicyManager, Repository pattern, Dotenv, Composer autoload, `Database::getConnection()`.
+
+7. **Do not delete existing tests.**
+
+## Test result summary
+
+After each run, report:
+- Number of tests executed
+- Number of assertions
+- Execution time
+- Final status: OK or FAIL

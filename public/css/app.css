@@ -1,0 +1,96 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #F8F9FA;
+}
+
+.sidebar {
+    background-color: #FFFFFF;
+    border-right: 1px solid #E5E7EB;
+}
+
+.nav-link {
+    color: #6C757D;
+    transition: all 0.2s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: #007BFF;
+    background-color: #F0F7FF;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #007BFF !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px;
+}
+
+/* Premium Enhancements */
+.glass-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+.gradient-text {
+    background: linear-gradient(90deg, #007BFF, #28A745);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+    /* Fallback for older browsers */
+}
+
+.btn-primary-gradient {
+    background: linear-gradient(135deg, #007BFF 0%, #0056b3 100%);
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-primary-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+}
+
+.btn-success-gradient {
+    background: linear-gradient(135deg, #28A745 0%, #1e7e34 100%);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-success-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.sidebar {
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.nav-link.active {
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+}
+
+/* Responsive: tablas y contenedores */
+@media (max-width: 768px) {
+    .overflow-x-auto {
+        -webkit-overflow-scrolling: touch;
+    }
+    table {
+        min-width: 100%;
+    }
+}
+
+/* DataTables responsive en móvil */
+@media (max-width: 640px) {
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        text-align: left;
+        margin-bottom: 0.5rem;
+    }
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 0.5rem;
+    }
+}
