@@ -22,7 +22,6 @@ class PatientPortalRepository
 
     public function getCitasProximas($paciente_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt_citas = $this->pdo->prepare("SELECT c.*, m.nombre as medico_nombre, m.apellido as medico_apellido
             FROM citas c
             JOIN medicos m ON c.medico_id = m.id
@@ -34,21 +33,19 @@ class PatientPortalRepository
 
     public function getHistorialClinico($paciente_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
-        $stmt_historial = $this->pdo->prepare("SELECT h.*, m.nombre as medico_nombre, m.apellido as medico_apellido, c.fecha, c.estado as cita_estado,
+        $stmt_historial = $this->pdo->prepare("SELECT h.*, m.nombre as medico_nombre, m.apellido as medico_apellido, c.fecha,
                 (SELECT COUNT(*) FROM ordenes_laboratorio ol WHERE ol.historial_id = h.id AND ol.estado = 'Pendiente') as ordenes_pendientes
             FROM historial_clinico h
             JOIN medicos m ON h.medico_id = m.id
             JOIN citas c ON h.cita_id = c.id
-            WHERE h.paciente_id = ? AND h.activo = 1
-            ORDER BY c.fecha DESC LIMIT 500");
+            WHERE h.paciente_id = ?
+            ORDER BY c.fecha DESC");
         $stmt_historial->execute([$paciente_id]);
         return $stmt_historial->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getOrdenesLaboratorio($paciente_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt_lab = $this->pdo->prepare("SELECT ol.*, c.fecha
             FROM ordenes_laboratorio ol
             JOIN historial_clinico h ON ol.historial_id = h.id
@@ -61,7 +58,6 @@ class PatientPortalRepository
 
     public function getPrescripcionesMedicas($paciente_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt_prescrip = $this->pdo->prepare("SELECT p.*, m.nombre as medico_nombre, m.apellido as medico_apellido, c.fecha
             FROM prescripciones p
             JOIN medicos m ON p.medico_id = m.id
@@ -74,7 +70,6 @@ class PatientPortalRepository
 
     public function getFacturasPendientes($paciente_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt = $this->pdo->prepare("SELECT f.*, 
                 (SELECT COUNT(*) FROM factura_detalle fd WHERE fd.factura_id = f.id) as items_count
             FROM facturas f

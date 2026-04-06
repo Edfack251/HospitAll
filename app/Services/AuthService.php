@@ -26,23 +26,21 @@ class AuthService
                 session_start();
             }
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_role'] = strtolower($user['rol_nombre']);
             $_SESSION['user_name'] = $user['nombre'];
+            $_SESSION['user_role'] = strtolower($user['rol_nombre']);
             $_SESSION['last_activity'] = time();
 
-            // Store user object for PolicyManager and other parts of the system
+            // Store user object for PolicyManager
             $_SESSION['user'] = [
                 'id' => $user['id'],
-                'nombre' => $user['nombre'],
-                'apellido' => $user['apellido'],
-                'correo_electronico' => $user['correo_electronico'],
-                'role' => strtolower($user['rol_nombre'])
+                'role' => strtolower($user['rol_nombre']),
+                'name' => $user['nombre']
             ];
 
             $this->setSpecificIds($user);
 
             // Auditoría: Login exitoso
-            $logService = new \App\Services\LogService($this->pdo);
+            $logService = new LogService($this->pdo);
             $logService->register($user['id'], 'Login exitoso', 'Auth');
 
             return $user;

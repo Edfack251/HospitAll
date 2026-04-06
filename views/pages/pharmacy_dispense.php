@@ -3,7 +3,6 @@ use App\Helpers\UrlHelper;
 use App\Controllers\PharmacyController;
 use App\Helpers\AuthHelper;
 use App\Helpers\CsrfHelper;
-use App\Helpers\PrivacyHelper;
 
 AuthHelper::checkRole(['farmaceutico', 'administrador']);
 
@@ -38,7 +37,7 @@ include __DIR__ . '/../layout/header.php';
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <p><span class="font-bold text-gray-400 uppercase text-[10px] block mb-1">Paciente</span> <span class="text-gray-800 font-semibold"><?php echo htmlspecialchars($prescripcion['paciente_nombre'] . ' ' . $prescripcion['paciente_apellido']); ?></span></p>
-            <p><span class="font-bold text-gray-400 uppercase text-[10px] block mb-1">Identificación</span> <span class="text-gray-800 font-semibold"><?php echo htmlspecialchars(PrivacyHelper::maskCedula($prescripcion['identificacion'] ?? '')); ?></span></p>
+            <p><span class="font-bold text-gray-400 uppercase text-[10px] block mb-1">Identificación</span> <span class="text-gray-800 font-semibold"><?php echo htmlspecialchars($prescripcion['identificacion']); ?></span></p>
             <p><span class="font-bold text-gray-400 uppercase text-[10px] block mb-1">Fecha Emisión</span> <span class="text-gray-800 font-semibold"><?php echo date('d/m/Y H:i', strtotime($prescripcion['fecha_prescripcion'])); ?></span></p>
         </div>
     </div>

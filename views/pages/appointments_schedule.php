@@ -79,7 +79,7 @@ include __DIR__ . '/../layout/header.php';
 
         <div>
             <label class="block text-sm font-medium mb-2">Médico</label>
-            <select name="medico_id" id="medico_id_select" required
+            <select name="medico_id" required
                 class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-[#007BFF] outline-none shadow-sm transition-all">
                 <option value="">Selecciona un médico</option>
                 <?php foreach ($medicos as $m): ?>
@@ -93,16 +93,13 @@ include __DIR__ . '/../layout/header.php';
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div>
                 <label class="block text-sm font-medium mb-2">Fecha</label>
-                <input type="date" name="fecha" id="fecha_input" required min="<?php echo date('Y-m-d'); ?>"
+                <input type="date" name="fecha" required min="<?php echo date('Y-m-d'); ?>"
                     class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-[#007BFF] outline-none">
             </div>
             <div>
                 <label class="block text-sm font-medium mb-2">Hora</label>
-                <select name="hora" id="hora_select" required disabled
-                    class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-[#007BFF] outline-none shadow-sm transition-all bg-gray-50">
-                    <option value="">Selecciona médico y fecha primero</option>
-                </select>
-                <p id="hora_message" class="text-xs mt-1 text-gray-500 hidden"></p>
+                <input type="time" name="hora" required
+                    class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-[#007BFF] outline-none">
             </div>
         </div>
 
@@ -114,7 +111,7 @@ include __DIR__ . '/../layout/header.php';
         </div>
 
         <div class="flex justify-end space-x-4 mt-4">
-            <a href="<?php echo ($_SESSION['user_role'] === 'paciente') ? App\Helpers\UrlHelper::url('patient_portal') : App\Helpers\UrlHelper::url('appointments'); ?>"
+            <a href="<?php echo App\Helpers\UrlHelper::url('appointments'); ?>"
                 class="px-6 py-2 rounded-lg border font-semibold text-[#6C757D] hover:bg-gray-50">Cancelar</a>
             <button type="submit"
                 class="bg-[#28A745] text-white px-6 py-2 rounded-lg font-semibold shadow-md hover:bg-green-700 transition-all">
@@ -135,90 +132,6 @@ include __DIR__ . '/../layout/header.php';
         const btnSaveEpisode = document.getElementById('btn_save_episode');
         const newEpDesc = document.getElementById('new_ep_desc');
 
-        // --- Horarios disponibles ---
-        const medicoSelect = document.getElementById('medico_id_select');
-        const fechaInput = document.getElementById('fecha_input');
-        const horaSelect = document.getElementById('hora_select');
-        const horaMessage = document.getElementById('hora_message');
-
-        function resetHoraSelect() {
-            horaSelect.innerHTML = '<option value="">Selecciona médico y fecha primero</option>';
-            horaSelect.disabled = true;
-            horaSelect.classList.add('bg-gray-50');
-            horaMessage.classList.add('hidden');
-            horaMessage.textContent = '';
-        }
-
-        function loadHorarios() {
-            const medicoId = medicoSelect ? medicoSelect.value : '';
-            const fecha = fechaInput ? fechaInput.value : '';
-
-            if (!medicoId || !fecha) {
-                resetHoraSelect();
-                return;
-            }
-
-            // Loading state
-            horaSelect.innerHTML = '<option value="">Cargando horarios...</option>';
-            horaSelect.disabled = true;
-            horaSelect.classList.add('bg-gray-50');
-            horaMessage.classList.add('hidden');
-
-            fetch(`<?php echo $baseUrl; ?>/api/appointments/horarios-disponibles?medico_id=${medicoId}&fecha=${fecha}`)
-                .then(res => res.json())
-                .then(data => {
-                    horaSelect.innerHTML = '';
-                    if (data.success && data.horarios.length > 0) {
-                        horaSelect.innerHTML = '<option value="">Selecciona un horario</option>';
-                        data.horarios.forEach(h => {
-                            const opt = document.createElement('option');
-                            opt.value = h;
-                            opt.textContent = h;
-                            horaSelect.appendChild(opt);
-                        });
-                        horaSelect.disabled = false;
-                        horaSelect.classList.remove('bg-gray-50');
-                        horaMessage.classList.add('hidden');
-                    } else if (data.success && data.horarios.length === 0) {
-                        horaSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
-                        horaSelect.disabled = true;
-                        horaMessage.textContent = 'No hay horarios disponibles para esta fecha.';
-                        horaMessage.className = 'text-xs mt-1 text-amber-600';
-                        horaMessage.classList.remove('hidden');
-                    } else {
-                        horaSelect.innerHTML = '<option value="">Error al cargar</option>';
-                        horaSelect.disabled = true;
-                        horaMessage.textContent = data.error || 'Error desconocido.';
-                        horaMessage.className = 'text-xs mt-1 text-red-600';
-                        horaMessage.classList.remove('hidden');
-                    }
-                })
-                .catch(err => {
-                    console.error('Error cargando horarios:', err);
-                    horaSelect.innerHTML = '<option value="">Error de conexión</option>';
-                    horaSelect.disabled = true;
-                    horaMessage.textContent = 'Error de conexión. Intente de nuevo.';
-                    horaMessage.className = 'text-xs mt-1 text-red-600';
-                    horaMessage.classList.remove('hidden');
-                });
-        }
-
-        if (medicoSelect) medicoSelect.addEventListener('change', loadHorarios);
-        if (fechaInput) fechaInput.addEventListener('change', loadHorarios);
-
-        // Validación al enviar
-        const form = horaSelect ? horaSelect.closest('form') : null;
-        if (form) {
-            form.addEventListener('submit', function (e) {
-                if (!horaSelect.value) {
-                    e.preventDefault();
-                    alert('Por favor selecciona un horario disponible.');
-                    horaSelect.focus();
-                }
-            });
-        }
-
-        // --- Episodios clínicos ---
         function loadEpisodes(pacienteId) {
             if (!pacienteId) {
                 episodioContainer.classList.add('hidden');

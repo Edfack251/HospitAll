@@ -34,30 +34,7 @@ class PolicyManager
             'view_laboratory',
             'manage_appointments',
             'view_inventory',
-            'view_admin_dashboard',
-            'view_imagenes',
-            'upload_imagen_result',
-            'register_emergency',
-            'assign_doctor_emergency',
-            'update_emergency_status',
-            'create_emergency_patient',
-            'schedule_appointment',
-            'attend_emergency',
-            'close_emergency',
-            'create_clinical_history',
-            'view_patient_history',
-            'view_doctor_dashboard',
-            'upload_lab_result',
-            'register_vital_signs',
-            'register_nursing_observation',
-            'generate_turno',
-            'call_turno',
-            'manage_turnos',
-            'internar_paciente',
-            'registrar_ronda',
-            'registrar_evolucion',
-            'dar_alta',
-            'view_hospitalizacion'
+            'view_admin_dashboard'
         ],
         'recepcionista' => [
             'create_patient',
@@ -66,12 +43,7 @@ class PolicyManager
             'schedule_appointment',
             'create_invoice',
             'view_billing',
-            'generate_turno',
-            'manage_turnos',
-            'view_laboratory',
-            'view_hospitalizacion',
-            'view_imagenes',
-            'call_turno'
+            'view_laboratory'
         ],
         'medico' => [
             'create_clinical_history',
@@ -79,46 +51,18 @@ class PolicyManager
             'schedule_appointment',
             'view_patient',
             'view_laboratory',
-            'view_doctor_dashboard',
-            'attend_emergency',
-            'close_emergency',
-            'call_turno',
-            'internar_paciente',
-            'registrar_evolucion',
-            'dar_alta',
-            'view_hospitalizacion',
-            'view_imagenes'
+            'view_doctor_dashboard'
         ],
         'farmaceutico' => [
             'dispense_medicine',
             'view_inventory',
             'manage_inventory',
-            'view_billing',
-            'call_turno'
+            'view_billing'
         ],
         'tecnico_laboratorio' => [
             'upload_lab_result',
             'view_laboratory',
-            'view_patient',
-            'call_turno'
-        ],
-        'tecnico_imagenes' => [
-            'view_imagenes',
-            'upload_imagen_result',
-            'view_patient',
-            'call_turno'
-        ],
-        'enfermera' => [
-            'view_patient',
-            'register_vital_signs',
-            'register_nursing_observation',
-            'register_emergency',
-            'assign_doctor_emergency',
-            'update_emergency_status',
-            'create_emergency_patient',
-            'internar_paciente',
-            'registrar_ronda',
-            'view_hospitalizacion'
+            'view_patient'
         ],
         'paciente' => [
             'view_own_patient_portal'
@@ -134,7 +78,7 @@ class PolicyManager
      */
     public static function can($user, string $action): bool
     {
-        $role = is_array($user) ? ($user['user_role'] ?? $user['role'] ?? $user['rol'] ?? null) : ($user->user_role ?? $user->role ?? $user->rol ?? null);
+        $role = is_array($user) ? ($user['role'] ?? $user['rol'] ?? null) : ($user->role ?? $user->rol ?? null);
 
         if (!$role) {
             return false;
@@ -160,7 +104,7 @@ class PolicyManager
     {
         if (!self::can($user, $action)) {
             $userId = is_array($user) ? ($user['id'] ?? null) : ($user->id ?? null);
-            $userRole = is_array($user) ? ($user['user_role'] ?? $user['role'] ?? $user['rol'] ?? 'unknown') : ($user->user_role ?? $user->role ?? $user->rol ?? 'unknown');
+            $userRole = is_array($user) ? ($user['role'] ?? $user['rol'] ?? 'unknown') : ($user->role ?? $user->rol ?? 'unknown');
 
             // Registrar intento fallido
             $pdo = Database::getConnection();

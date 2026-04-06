@@ -5,12 +5,10 @@ use App\Config\Database;
 use App\Policies\PolicyManager;
 use App\Services\AdminDashboardService;
 use App\Repositories\PatientRepository;
-use App\Repositories\AppointmentRepository;
+use App\Repositories\AppointmentsRepository;
 use App\Repositories\BillingRepository;
 use App\Repositories\PharmacyRepository;
 use App\Repositories\LaboratoryRepository;
-use App\Repositories\ImagingRepository;
-use App\Repositories\NursingRepository;
 use App\Repositories\LogRepository;
 
 class AdminDashboardController
@@ -22,12 +20,10 @@ class AdminDashboardController
     {
         $this->pdo = $pdo;
         $patientRepo = new PatientRepository($pdo);
-        $appointmentsRepo = new AppointmentRepository($pdo);
+        $appointmentsRepo = new AppointmentsRepository($pdo);
         $billingRepo = new BillingRepository($pdo);
         $pharmacyRepo = new PharmacyRepository($pdo);
         $labRepo = new LaboratoryRepository($pdo);
-        $imagenesRepo = new ImagingRepository($pdo);
-        $enfermeriaRepo = new NursingRepository($pdo);
         $logRepo = new LogRepository($pdo);
 
         $this->adminDashboardService = new AdminDashboardService(
@@ -36,19 +32,16 @@ class AdminDashboardController
             $billingRepo,
             $pharmacyRepo,
             $labRepo,
-            $imagenesRepo,
-            $enfermeriaRepo,
             $logRepo
         );
     }
 
     public function index()
     {
-        if (!isset($_SESSION['user_id'])) {
+        $user = $_SESSION['user'] ?? null;
+        if (!$user) {
             \App\Helpers\UrlHelper::redirect('login');
         }
-
-        $user = $_SESSION['user'] ?? null;
 
         PolicyManager::authorize($user, 'view_admin_dashboard');
 

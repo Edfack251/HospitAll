@@ -90,51 +90,29 @@ include __DIR__ . '/../layout/header.php';
             <?php endif; ?>
         </div>
 
-        <?php 
-        $hasMedicamento = false;
-        foreach ($items as $item) {
-            if (($item['tipo_item'] ?? '') === 'medicamento') {
-                $hasMedicamento = true;
-                break;
-            }
-        }
-        $isRecepcionista = $_SESSION['user_role'] === 'recepcionista';
-        $pagoBloqueado = $isRecepcionista && $hasMedicamento;
-        ?>
-
         <?php if ($f['estado'] === 'Pendiente'): ?>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 class="text-lg font-bold text-gray-800 mb-4">Liquidar Factura</h3>
-                
-                <?php if ($pagoBloqueado): ?>
-                    <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm mb-4">
-                        <div class="flex items-center gap-2 font-bold mb-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                            Acceso Restringido
-                        </div>
-                        Esta factura contiene medicamentos. Por políticas de seguridad, el cobro de farmacia debe ser procesado por el personal farmacéutico.
-                    </div>
-                <?php else: ?>
-                    <form action="<?php echo UrlHelper::url('api/billing/pay'); ?>" method="POST">
-                        <?php $csrf = CsrfHelper::generateToken(); ?>
-                        <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
-                        <input type="hidden" name="factura_id" value="<?php echo $f['id']; ?>">
+                <form action="<?php echo UrlHelper::url('api/billing/pay'); ?>" method="POST">
+                    <?php $csrf = CsrfHelper::generateToken(); ?>
+                    <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
+                    <input type="hidden" name="factura_id" value="<?php echo $f['id']; ?>">
 
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Método de Pago</label>
-                        <select name="metodo_pago" required
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007BFF] mb-4">
-                            <option value="Efectivo">Efectivo</option>
-                            <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
-                            <option value="Seguro Médico">Seguro Médico Copago</option>
-                            <option value="Transferencia">Transferencia Bancaria</option>
-                        </select>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Método de Pago</label>
+                    <select name="metodo_pago" required
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007BFF] mb-4">
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
+                        <option value="Seguro Médico">Seguro Médico Copago</option>
+                        <option value="Transferencia">Transferencia Bancaria</option>
+                    </select>
 
-                        <button type="submit"
-                            class="w-full bg-[#28A745] text-white font-bold py-3 rounded-lg hover:bg-green-700 transition shadow-sm">
-                            Confirmar Pago ($<?php echo number_format($f['total'], 2); ?>)
-                        </button>
-                    </form>
-                <?php endif; ?>
+                    <button type="submit"
+                        class="w-full bg-[#28A745] text-white font-bold py-3 rounded-lg hover:bg-green-700 transition shadow-sm">
+                        Confirmar Pago ($
+                        <?php echo number_format($f['total'], 2); ?>)
+                    </button>
+                </form>
             </div>
         <?php endif; ?>
     </div>
@@ -166,23 +144,23 @@ include __DIR__ . '/../layout/header.php';
                             <tr class="hover:bg-gray-50/50">
                                 <td class="py-3 px-2">
                                     <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-semibold uppercase">
-                                        <?php echo htmlspecialchars($item['tipo_item'] ?? ''); ?>
+                                        <?php echo htmlspecialchars($item['tipo_item']); ?>
                                     </span>
                                 </td>
                                 <td class="py-3 px-2 font-medium text-[#212529]">
-                                    <?php echo htmlspecialchars($item['descripcion'] ?? ''); ?>
+                                    <?php echo htmlspecialchars($item['descripcion']); ?>
                                 </td>
                                 <td class="py-3 px-2 text-[#6C757D] text-sm text-center">
                                     x
-                                    <?php echo $item['cantidad'] ?? 0; ?>
+                                    <?php echo $item['cantidad']; ?>
                                 </td>
                                 <td class="py-3 px-2 text-[#6C757D] text-sm">
                                     $
-                                    <?php echo number_format($item['precio'] ?? 0, 2); ?>
+                                    <?php echo number_format($item['precio'], 2); ?>
                                 </td>
                                 <td class="py-3 px-2 font-bold text-[#212529] text-right">
                                     $
-                                    <?php echo number_format($item['subtotal'] ?? 0, 2); ?>
+                                    <?php echo number_format($item['subtotal'], 2); ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

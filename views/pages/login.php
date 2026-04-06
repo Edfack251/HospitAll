@@ -2,23 +2,8 @@
 use App\Helpers\CsrfHelper;
 use App\Helpers\UrlHelper;
 
-if (isset($_SESSION['user_id']) && isset($_SESSION['user_role'])) {
-    $role = $_SESSION['user_role'] ?? '';
-    if ($role === 'tecnico_laboratorio') {
-        UrlHelper::redirect('dashboard_laboratory');
-    } elseif ($role === 'enfermera') {
-        UrlHelper::redirect('dashboard_nursing');
-    } elseif ($role === 'recepcionista') {
-        UrlHelper::redirect('dashboard_receptionist');
-    } elseif ($role === 'tecnico_imagenes') {
-        UrlHelper::redirect('dashboard_imaging');
-    } elseif ($role === 'administrador') {
-        UrlHelper::redirect('api/admin/dashboard');
-    } elseif ($role === 'medico') {
-        UrlHelper::redirect('api/doctor/dashboard');
-    } else {
-        UrlHelper::redirect('dashboard');
-    }
+if (isset($_SESSION['user_id'])) {
+    UrlHelper::redirect('dashboard');
 }
 ?>
 <!DOCTYPE html>

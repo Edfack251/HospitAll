@@ -31,19 +31,10 @@ class AuthController
                         UrlHelper::redirect('api/doctor/dashboard');
                         break;
                     case 'recepcionista':
-                        UrlHelper::redirect('dashboard_receptionist');
+                        UrlHelper::redirect('appointments');
                         break;
                     case 'tecnico_laboratorio':
-                        UrlHelper::redirect('dashboard_laboratory');
-                        break;
-                    case 'tecnico_imagenes':
-                        UrlHelper::redirect('dashboard_imaging');
-                        break;
-                    case 'enfermera':
-                        UrlHelper::redirect('dashboard_nursing');
-                        break;
-                    case 'farmaceutico':
-                        UrlHelper::redirect('dashboard');
+                        UrlHelper::redirect('laboratory');
                         break;
                     case 'administrador':
                         UrlHelper::redirect('api/admin/dashboard');

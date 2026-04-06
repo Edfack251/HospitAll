@@ -1,13 +1,8 @@
 # HospitAll - Sync project to XAMPP htdocs
 # Run from project root: powershell -ExecutionPolicy Bypass -File scripts\sync-to-xampp.ps1
 
-$source = Split-Path -Parent $PSScriptRoot
+$source = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $target = "C:\xampp\htdocs\HospitAll V1"
-
-if ($source.TrimEnd('\') -ieq $target.TrimEnd('\')) {
-    Write-Host "Proyecto detectado directamente en htdocs. No se requiere sincronización." -ForegroundColor Green
-    exit 0
-}
 
 if (!(Test-Path "C:\xampp\htdocs")) {
     Write-Host "XAMPP htdocs not found. Create C:\xampp\htdocs or adjust path." -ForegroundColor Red

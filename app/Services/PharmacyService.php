@@ -111,177 +111,6 @@ class PharmacyService
     }
 
     /**
-     * Registra un nuevo medicamento en el inventario.
-     *
-     * @param array $data Datos del medicamento
-     * @param int $usuario_id ID del usuario que registra
-     * @return int ID del medicamento creado
-     * @throws Exception Si los datos son inválidos
-     */
-    public function registrarMedicamento(array $data, int $usuario_id): int
-    {
-        // Validaciones
-        if (empty(trim($data['nombre'] ?? ''))) {
-            throw new Exception("El nombre del medicamento es obligatorio.");
-        }
-        if (empty(trim($data['presentacion'] ?? ''))) {
-            throw new Exception("La presentación es obligatoria.");
-        }
-        $precio = (float) ($data['precio'] ?? -1);
-        if ($precio < 0) {
-            throw new Exception("El precio debe ser mayor o igual a 0.");
-        }
-        $stock = (int) ($data['stock'] ?? 0);
-        if ($stock < 0) {
-            throw new Exception("El stock inicial debe ser mayor o igual a 0.");
-        }
-        if (!empty($data['fecha_vencimiento']) && strtotime($data['fecha_vencimiento']) < strtotime(date('Y-m-d'))) {
-            throw new Exception("La fecha de vencimiento no puede ser anterior a hoy.");
-        }
-
-        // Generar código automático si no se provee
-        if (empty(trim($data['codigo'] ?? ''))) {
-            $data['codigo'] = 'MED-' . strtoupper(substr(trim($data['nombre']), 0, 4)) . '-' . time();
-        }
-
-        $data['precio'] = $precio;
-        $data['stock'] = $stock;
-
-        try {
-            if (!$this->pdo->inTransaction()) {
-                $this->pdo->beginTransaction();
-            }
-
-            $medicamento_id = $this->repo->createMedicamento($data);
-
-            // Registrar movimiento de entrada si hay stock inicial
-            if ($stock > 0) {
-                $this->repo->createMovimiento($medicamento_id, 'Entrada', $stock, 'Registro inicial de medicamento', $usuario_id);
-            }
-
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->commit();
-            }
-
-            // Auditoría
-            $logService = new LogService($this->pdo);
-            $logService->register(
-                $usuario_id,
-                'Registro de medicamento',
-                'Farmacia',
-                "ID: $medicamento_id, Nombre: {$data['nombre']}, Stock: $stock",
-                'INFO'
-            );
-
-            return (int) $medicamento_id;
-        } catch (Exception $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
-            error_log("Error PharmacyService::registrarMedicamento: " . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    /**
-     * Edita los datos de un medicamento existente.
-     *
-     * @param int $id ID del medicamento
-     * @param array $data Datos a actualizar
-     * @return bool
-     * @throws Exception Si el medicamento no existe o datos inválidos
-     */
-    public function editarMedicamento(int $id, array $data): bool
-    {
-        if (empty(trim($data['nombre'] ?? ''))) {
-            throw new Exception("El nombre del medicamento es obligatorio.");
-        }
-        if (empty(trim($data['presentacion'] ?? ''))) {
-            throw new Exception("La presentación es obligatoria.");
-        }
-        $precio = (float) ($data['precio'] ?? -1);
-        if ($precio < 0) {
-            throw new Exception("El precio debe ser mayor o igual a 0.");
-        }
-
-        $medicamento = $this->repo->getMedicamentoById($id);
-        if (!$medicamento) {
-            throw new Exception("Medicamento no encontrado.");
-        }
-
-        $data['precio'] = $precio;
-        $result = $this->repo->updateMedicamento($id, $data);
-
-        if ($result) {
-            $logService = new LogService($this->pdo);
-            $logService->register(
-                $_SESSION['user_id'] ?? null,
-                'Edición de medicamento',
-                'Farmacia',
-                "ID: $id, Nombre: {$data['nombre']}",
-                'INFO'
-            );
-        }
-
-        return $result;
-    }
-
-    /**
-     * Ajusta el stock de un medicamento (entrada de inventario).
-     *
-     * @param int $id ID del medicamento
-     * @param int $cantidad Cantidad a añadir
-     * @param string $motivo Motivo del ajuste
-     * @param int $usuario_id ID del usuario que realiza el ajuste
-     * @return bool
-     * @throws Exception Si los datos son inválidos
-     */
-    public function ajustarStock(int $id, int $cantidad, string $motivo, int $usuario_id): bool
-    {
-        if ($cantidad <= 0) {
-            throw new Exception("La cantidad debe ser mayor a 0.");
-        }
-        if (empty(trim($motivo))) {
-            throw new Exception("El motivo del ajuste es obligatorio.");
-        }
-
-        $medicamento = $this->repo->getMedicamentoById($id);
-        if (!$medicamento) {
-            throw new Exception("Medicamento no encontrado.");
-        }
-
-        try {
-            if (!$this->pdo->inTransaction()) {
-                $this->pdo->beginTransaction();
-            }
-
-            $this->repo->increaseStock($id, $cantidad);
-            $this->repo->createMovimiento($id, 'Entrada', $cantidad, $motivo, $usuario_id);
-
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->commit();
-            }
-
-            $logService = new LogService($this->pdo);
-            $logService->register(
-                $usuario_id,
-                'Ajuste de stock (entrada)',
-                'Farmacia',
-                "Medicamento ID: $id ({$medicamento['nombre']}), +$cantidad unidades, Motivo: $motivo",
-                'INFO'
-            );
-
-            return true;
-        } catch (Exception $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
-            error_log("Error PharmacyService::ajustarStock: " . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    /**
      * Obtiene el inventario de medicamentos.
      */
     public function getInventory()
@@ -300,14 +129,9 @@ class PharmacyService
     /**
      * Obtiene las prescripciones pendientes de dispensación.
      */
-    public function getPendingPrescriptions($limit = 5, $offset = 0)
+    public function getPendingPrescriptions()
     {
-        return $this->repo->getPendingPrescriptions($limit, $offset);
-    }
-
-    public function getPendingPrescriptionsCount()
-    {
-        return $this->repo->getPendingPrescriptionsCount();
+        return $this->repo->getPendingPrescriptions();
     }
 
     /**
@@ -494,18 +318,5 @@ class PharmacyService
         if ($stmt->fetchColumn() > 0) {
             throw new Exception("No se puede eliminar el medicamento porque está en prescripciones pendientes.");
         }
-    }
-
-    /**
-     * Obtiene el historial de movimientos de inventario.
-     */
-    public function getMovimientos(array $filtros = [])
-    {
-        return $this->repo->getMovimientos($filtros);
-    }
-
-    public function getMedicamentosConStockParaRecetar()
-    {
-        return $this->repo->getWithStock();
     }
 }

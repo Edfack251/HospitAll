@@ -34,7 +34,6 @@ class ClinicalEpisodeRepository
 
     public function getByPatient($paciente_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = "SELECT * FROM episodios_clinicos WHERE paciente_id = ? ORDER BY estado ASC, fecha_inicio DESC";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$paciente_id]);
@@ -62,7 +61,7 @@ class ClinicalEpisodeRepository
                 LEFT JOIN atenciones a ON a.cita_id = c.id
                 LEFT JOIN historial_clinico h ON h.cita_id = c.id
                 WHERE e.paciente_id = ?
-                ORDER BY e.estado ASC, e.fecha_inicio DESC, c.fecha ASC, c.hora ASC LIMIT 500";
+                ORDER BY e.estado ASC, e.fecha_inicio DESC, c.fecha ASC, c.hora ASC";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$paciente_id]);
@@ -125,7 +124,6 @@ class ClinicalEpisodeRepository
         $historialIds = array_unique(array_filter($historialIds));
         if (!empty($historialIds)) {
             $placeholders = str_repeat('?,', count($historialIds) - 1) . '?';
-            // TODO: Refactorizar SELECT * cuando se estabilice la vista
             $sqlLab = "SELECT * FROM ordenes_laboratorio WHERE historial_id IN ($placeholders)";
             $stmtLab = $this->pdo->prepare($sqlLab);
             $stmtLab->execute(array_values($historialIds));

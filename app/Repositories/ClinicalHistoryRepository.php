@@ -15,7 +15,6 @@ class ClinicalHistoryRepository
 
     public function getPatientSearchList()
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt = $this->pdo->query("SELECT p.*, (SELECT MAX(fecha) FROM citas WHERE paciente_id = p.id) as última_cita 
                                   FROM pacientes p ORDER BY nombre ASC");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -23,7 +22,6 @@ class ClinicalHistoryRepository
 
     public function getBasicPatientData($patient_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt = $this->pdo->prepare("SELECT * FROM pacientes WHERE id = ?");
         $stmt->execute([$patient_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -31,7 +29,6 @@ class ClinicalHistoryRepository
 
     public function getConsultationsHistory($patient_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt_hist = $this->pdo->prepare("SELECT h.*, m.nombre as medico_nombre, m.apellido as medico_apellido, c.fecha
                                          FROM historial_clinico h
                                          JOIN medicos m ON h.medico_id = m.id
@@ -44,7 +41,6 @@ class ClinicalHistoryRepository
 
     public function getLaboratoryOrders($patient_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt_lab = $this->pdo->prepare("SELECT ol.*, c.fecha as fecha_cita
                                         FROM ordenes_laboratorio ol
                                         JOIN historial_clinico h ON ol.historial_id = h.id
@@ -54,30 +50,16 @@ class ClinicalHistoryRepository
         $stmt_lab->execute([$patient_id]);
         return $stmt_lab->fetchAll(PDO::FETCH_ASSOC);
     }
-
     public function getByCitaId($cita_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt = $this->pdo->prepare("SELECT * FROM historial_clinico WHERE cita_id = ? AND activo = 1 LIMIT 1");
         $stmt->execute([$cita_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function getByAppointmentId($cita_id)
-    {
-        return $this->getByCitaId($cita_id);
-    }
-
-    public function updateMedico(int $historial_id, int $medico_id): bool
-    {
-        $sql = "UPDATE historial_clinico SET medico_id = ? WHERE id = ?";
-        return $this->pdo->prepare($sql)->execute([$medico_id, $historial_id]);
-    }
-
     public function getFullHistoryChainByEncounter($cita_id)
     {
         // En un modelo append-only, podríamos querer ver todas las versiones o solo la cadena
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt = $this->pdo->prepare("SELECT h.*, m.nombre as medico_nombre, m.apellido as medico_apellido 
                                      FROM historial_clinico h
                                      JOIN medicos m ON h.medico_id = m.id
@@ -129,7 +111,6 @@ class ClinicalHistoryRepository
 
     public function getConsultasRecientes($medico_id, $limit = 5)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = "SELECT hc.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido, p.identificacion as paciente_identificacion, c.fecha as fecha_cita
                 FROM historial_clinico hc
                 JOIN pacientes p ON hc.paciente_id = p.id
@@ -144,10 +125,13 @@ class ClinicalHistoryRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Obtiene el historial clínico completo consolidado de un paciente.
+     * Incluye datos de identidad, últimas consultas, prescripciones y laboratorios.
+     */
     public function getFullClinicalHistoryByPatientId($patient_id, $limit = 15)
     {
         // 1. Datos básicos e identidad
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt_p = $this->pdo->prepare("SELECT p.*, pi.grupo_sanguineo, pi.alergias, pi.discapacidad, pi.contacto_emergencia_nombre, pi.contacto_emergencia_telefono
                                        FROM pacientes p 
                                        LEFT JOIN pacientes_identidad pi ON p.id = pi.paciente_id 
@@ -159,7 +143,6 @@ class ClinicalHistoryRepository
             return null;
 
         // 2. Consultas recientes
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt_h = $this->pdo->prepare("SELECT h.*, m.nombre as medico_nombre, m.apellido as medico_apellido, c.fecha as fecha_cita
                                        FROM historial_clinico h
                                        JOIN medicos m ON h.medico_id = m.id
@@ -174,7 +157,6 @@ class ClinicalHistoryRepository
         // Enriquecer con prescripciones y laboratorios por cada consulta
         foreach ($history as &$entry) {
             // Prescripciones
-            // TODO: Refactorizar SELECT * cuando se estabilice la vista
             $stmt_pres = $this->pdo->prepare("SELECT pr.*, pd.medicamento_texto, pd.dosis, pd.frecuencia, pd.duracion, m.nombre as medicamento_nombre
                                               FROM prescripciones pr
                                               JOIN prescripcion_detalle pd ON pr.id = pd.prescripcion_id
@@ -184,7 +166,6 @@ class ClinicalHistoryRepository
             $entry['prescriptions'] = $stmt_pres->fetchAll(PDO::FETCH_ASSOC);
 
             // Órdenes de laboratorio
-            // TODO: Refactorizar SELECT * cuando se estabilice la vista
             $stmt_lab = $this->pdo->prepare("SELECT ol.*, old.examen_solicitado, old.resultado_examen, old.rango_referencia
                                             FROM ordenes_laboratorio ol
                                             LEFT JOIN orden_laboratorio_detalle old ON ol.id = old.orden_id
@@ -199,6 +180,9 @@ class ClinicalHistoryRepository
         ];
     }
 
+    /**
+     * Verifica si un médico ha atendido previamente a un paciente.
+     */
     public function hasDoctorTreatedPatient($medico_id, $paciente_id)
     {
         $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM citas WHERE medico_id = ? AND paciente_id = ? AND estado = 'Atendida'");

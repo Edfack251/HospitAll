@@ -12,11 +12,6 @@ abstract class BaseRepository
         $this->pdo = $pdo;
     }
 
-    public function beginTransaction() { return $this->pdo->beginTransaction(); }
-    public function commit() { return $this->pdo->commit(); }
-    public function rollBack() { return $this->pdo->rollBack(); }
-    public function getPDO() { return $this->pdo; }
-
     /**
      * Appends a soft delete condition to a SQL query.
      * 
@@ -87,7 +82,6 @@ abstract class BaseRepository
      */
     protected function findByIdIncludingDeleted(string $table, int $id): ?array
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = "SELECT * FROM {$table} WHERE id = ?";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$id]);

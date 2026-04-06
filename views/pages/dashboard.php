@@ -1,30 +1,8 @@
 <?php
 use App\Controllers\DashboardController;
 use App\Helpers\AuthHelper;
-use App\Helpers\UrlHelper;
-use App\Helpers\CsrfHelper;
 
-AuthHelper::checkRole(['administrador', 'medico', 'recepcionista', 'tecnico_laboratorio', 'farmaceutico', 'tecnico_imagenes', 'enfermera']);
-
-$role = $_SESSION['user_role'] ?? '';
-if ($role === 'recepcionista') {
-    UrlHelper::redirect('dashboard_receptionist');
-}
-if ($role === 'tecnico_laboratorio') {
-    UrlHelper::redirect('dashboard_laboratory');
-}
-if ($role === 'tecnico_imagenes') {
-    UrlHelper::redirect('dashboard_imaging');
-}
-if ($role === 'enfermera') {
-    UrlHelper::redirect('dashboard_nursing');
-}
-if ($role === 'administrador') {
-    UrlHelper::redirect('api/admin/dashboard');
-}
-if ($role === 'medico') {
-    UrlHelper::redirect('api/doctor/dashboard');
-}
+AuthHelper::checkRole(['administrador', 'medico', 'recepcionista', 'tecnico_laboratorio', 'farmaceutico']);
 
 $controller = new DashboardController($pdo);
 $data = $controller->index();
@@ -45,7 +23,6 @@ $pageTitle = 'Dashboard - HospitAll';
 $activePage = 'dashboard';
 $headerTitle = 'Panel General';
 $headerSubtitle = 'Bienvenido al sistema de gestión HospitAll.';
-$csrfToken = CsrfHelper::generateToken();
 include __DIR__ . '/../layout/header.php';
 ?>
 
@@ -97,17 +74,8 @@ include __DIR__ . '/../layout/header.php';
     <div class="flex justify-between items-center mb-8">
         <?php if ($role === 'farmaceutico'): ?>
             <h3 class="text-2xl font-bold gradient-text">Ventas Recientes</h3>
-            <div class="flex gap-2">
-                <a href="<?php echo App\Helpers\UrlHelper::url('pharmacy_prescriptions'); ?>"
-                    class="text-emerald-600 text-sm font-bold hover:underline bg-emerald-50 px-4 py-2 rounded-full transition border border-emerald-100 flex items-center shadow-sm">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    Prescripciones
-                </a>
-                <a href="<?php echo App\Helpers\UrlHelper::url('pharmacy'); ?>"
-                    class="text-blue-600 text-sm font-bold hover:underline bg-blue-50 px-4 py-2 rounded-full transition border border-blue-100 flex items-center shadow-sm">
-                    Ir a Farmacia
-                </a>
-            </div>
+            <a href="<?php echo App\Helpers\UrlHelper::url('pharmacy'); ?>"
+                class="text-blue-600 text-sm font-bold hover:underline bg-blue-50 px-4 py-2 rounded-full transition">Ir a Farmacia</a>
         <?php else: ?>
             <h3 class="text-2xl font-bold gradient-text">Próximas Citas</h3>
             <a href="<?php echo App\Helpers\UrlHelper::url('appointments'); ?>"
@@ -211,5 +179,4 @@ include __DIR__ . '/../layout/header.php';
     <?php endif; ?>
 </div>
 
-
-<?php include __DIR__ . '/../layout/footer.php'; ?>
+<?php include __DIR__ . '/../layout/footer.php'; ?>

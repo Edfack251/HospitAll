@@ -13,7 +13,6 @@ class PharmacyRepository extends BaseRepository
 
     public function getMedicamentoForUpdate($id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = $this->applySoftDeleteFilter("SELECT * FROM medicamentos WHERE id = ? FOR UPDATE");
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$id]);
@@ -64,78 +63,22 @@ class PharmacyRepository extends BaseRepository
         return $stmt_mov->execute([$medicamento_id, $tipo, $cantidad, $motivo, $usuario_id]);
     }
 
-    public function createMedicamento(array $data)
-    {
-        $sql = "INSERT INTO medicamentos (codigo, nombre, descripcion, presentacion, concentracion, lote, proveedor, precio, stock, fecha_vencimiento)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([
-            $data['codigo'] ?? null,
-            $data['nombre'],
-            $data['descripcion'] ?? null,
-            $data['presentacion'] ?? null,
-            $data['concentracion'] ?? null,
-            $data['lote'] ?? null,
-            $data['proveedor'] ?? null,
-            $data['precio'] ?? 0,
-            $data['stock'] ?? 0,
-            $data['fecha_vencimiento'] ?? null
-        ]);
-        return $this->pdo->lastInsertId();
-    }
-
-    public function updateMedicamento(int $id, array $data)
-    {
-        $sql = "UPDATE medicamentos SET nombre = ?, descripcion = ?, presentacion = ?, concentracion = ?,
-                lote = ?, proveedor = ?, precio = ?, fecha_vencimiento = ?
-                WHERE id = ? AND deleted_at IS NULL";
-        $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute([
-            $data['nombre'],
-            $data['descripcion'] ?? null,
-            $data['presentacion'] ?? null,
-            $data['concentracion'] ?? null,
-            $data['lote'] ?? null,
-            $data['proveedor'] ?? null,
-            $data['precio'] ?? 0,
-            $data['fecha_vencimiento'] ?? null,
-            $id
-        ]);
-    }
-
-    public function increaseStock(int $id, int $cantidad)
-    {
-        $stmt = $this->pdo->prepare("UPDATE medicamentos SET stock = stock + ? WHERE id = ? AND deleted_at IS NULL");
-        return $stmt->execute([$cantidad, $id]);
-    }
-
-    public function getMedicamentoById(int $id)
-    {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
-        $sql = $this->applySoftDeleteFilter("SELECT * FROM medicamentos WHERE id = ?");
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
     public function getAllMedicamentos()
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
-        $sql = $this->applySoftDeleteFilter("SELECT * FROM medicamentos ORDER BY nombre ASC LIMIT 500");
+        $sql = $this->applySoftDeleteFilter("SELECT * FROM medicamentos ORDER BY nombre ASC");
         $stmt = $this->pdo->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getAllPacientesBasic()
     {
-        $sql = $this->applySoftDeleteFilter("SELECT id, nombre, apellido, identificacion FROM pacientes ORDER BY nombre ASC LIMIT 500");
+        $sql = $this->applySoftDeleteFilter("SELECT id, nombre, apellido, identificacion FROM pacientes ORDER BY nombre ASC");
         $stmt = $this->pdo->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getPendingPrescriptions($limit = 5, $offset = 0)
+    public function getPendingPrescriptions()
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = "SELECT p.*, 
                        pa.nombre as paciente_nombre, pa.apellido as paciente_apellido,
                        m.nombre as medico_nombre, m.apellido as medico_apellido,
@@ -152,37 +95,12 @@ class PharmacyRepository extends BaseRepository
         
         $sql .= " GROUP BY p.id
                 ORDER BY p.fecha_prescripcion DESC";
-
-        if ($limit !== null) {
-            $sql .= " LIMIT " . (int) $limit;
-            if ($offset > 0) {
-                $sql .= " OFFSET " . (int) $offset;
-            }
-        }
-
         $stmt = $this->pdo->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getPendingPrescriptionsCount()
-    {
-        $sql = "SELECT COUNT(DISTINCT p.id)
-                FROM prescripciones p
-                JOIN pacientes pa ON p.paciente_id = pa.id
-                JOIN medicos m ON p.medico_id = m.id
-                WHERE p.estado = 'Pendiente'";
-        
-        $sql = $this->applySoftDeleteFilter($sql, 'p');
-        $sql = $this->applySoftDeleteFilter($sql, 'pa');
-        $sql = $this->applySoftDeleteFilter($sql, 'm');
-
-        $stmt = $this->pdo->query($sql);
-        return (int) $stmt->fetchColumn();
-    }
-
     public function getPrescriptionAndDetails($id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = "SELECT p.*, pa.nombre as paciente_nombre, pa.apellido as paciente_apellido, pa.identificacion
                 FROM prescripciones p 
                 JOIN pacientes pa ON p.paciente_id = pa.id 
@@ -254,51 +172,5 @@ class PharmacyRepository extends BaseRepository
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$startDate, $endDate]);
         return (int)$stmt->fetchColumn();
-    }
-
-    public function getMovimientos(array $filtros = [])
-    {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
-        $sql = "SELECT m.*, med.nombre as medicamento_nombre, med.presentacion, med.concentracion,
-                       u.nombre as usuario_nombre, u.apellido as usuario_apellido
-                FROM movimientos_inventario m
-                JOIN medicamentos med ON m.medicamento_id = med.id
-                JOIN usuarios u ON m.usuario_id = u.id
-                WHERE 1=1";
-        
-        $params = [];
-
-        if (!empty($filtros['medicamento_id'])) {
-            $sql .= " AND m.medicamento_id = ?";
-            $params[] = $filtros['medicamento_id'];
-        }
-
-        if (!empty($filtros['tipo_movimiento'])) {
-            $sql .= " AND m.tipo_movimiento = ?";
-            $params[] = $filtros['tipo_movimiento'];
-        }
-
-        if (!empty($filtros['fecha_desde'])) {
-            $sql .= " AND DATE(m.fecha_movimiento) >= ?";
-            $params[] = $filtros['fecha_desde'];
-        }
-
-        if (!empty($filtros['fecha_hasta'])) {
-            $sql .= " AND DATE(m.fecha_movimiento) <= ?";
-            $params[] = $filtros['fecha_hasta'];
-        }
-
-        $sql .= " ORDER BY m.fecha_movimiento DESC LIMIT 500";
-
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function getWithStock()
-    {
-        $sql = "SELECT id, nombre, stock_actual, precio_unidad FROM medicamentos WHERE stock_actual > 0 AND deleted_at IS NULL ORDER BY nombre ASC";
-        $stmt = $this->pdo->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

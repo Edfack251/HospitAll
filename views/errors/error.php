@@ -46,29 +46,7 @@
             <p class="text-[#6C757D] mt-4">Ha ocurrido un error inesperado.</p>
         </div>
 
-        <?php
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        $role = $_SESSION['user_role'] ?? '';
-        $backUrl = \App\Helpers\UrlHelper::url('login');
-        if ($role === 'enfermera') {
-            $backUrl = \App\Helpers\UrlHelper::url('dashboard_nursing');
-        } elseif ($role === 'administrador') {
-            $backUrl = \App\Helpers\UrlHelper::url('api/admin/dashboard');
-        } elseif ($role === 'recepcionista') {
-            $backUrl = \App\Helpers\UrlHelper::url('dashboard_receptionist');
-        } elseif ($role === 'medico') {
-            $backUrl = \App\Helpers\UrlHelper::url('api/doctor/dashboard');
-        } elseif ($role === 'tecnico_laboratorio') {
-            $backUrl = \App\Helpers\UrlHelper::url('dashboard_laboratory');
-        } elseif ($role === 'tecnico_imagenes') {
-            $backUrl = \App\Helpers\UrlHelper::url('dashboard_imaging');
-        } elseif ($role === 'farmaceutico') {
-            $backUrl = \App\Helpers\UrlHelper::url('dashboard');
-        }
-        ?>
-        <a href="<?php echo htmlspecialchars($backUrl); ?>"
+        <a href="javascript:history.back()"
             class="primary-btn inline-block w-full py-3 rounded-lg text-white font-semibold shadow-md">
             Volver
         </a>

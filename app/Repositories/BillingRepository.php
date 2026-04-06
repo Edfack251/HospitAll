@@ -72,7 +72,6 @@ class BillingRepository
 
     public function getInvoice($factura_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt = $this->pdo->prepare("SELECT f.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido, p.identificacion 
                                      FROM facturas f JOIN pacientes p ON f.paciente_id = p.id WHERE f.id = ?");
         $stmt->execute([$factura_id]);
@@ -81,7 +80,6 @@ class BillingRepository
 
     public function getInvoiceItems($factura_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt = $this->pdo->prepare("SELECT * FROM factura_detalle WHERE factura_id = ? ORDER BY id ASC");
         $stmt->execute([$factura_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -89,7 +87,6 @@ class BillingRepository
 
     public function getAllInvoices($limit = null, $offset = 0)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = "SELECT f.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido, p.identificacion as paciente_identificacion, p.id as paciente_id_real 
                 FROM facturas f 
                 JOIN pacientes p ON f.paciente_id = p.id 
@@ -106,42 +103,6 @@ class BillingRepository
         }
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * IDs de órdenes de laboratorio que ya tienen factura (ya fueron cobradas/billadas).
-     * Detecta por descripcion "Orden de Laboratorio #X" en factura_detalle.
-     */
-    public function getOrdenesLabFacturados()
-    {
-        $stmt = $this->pdo->query(
-            "SELECT DISTINCT fd.descripcion FROM factura_detalle fd 
-             WHERE fd.tipo_item = 'laboratorio' AND fd.descripcion LIKE 'Orden de Laboratorio #%'"
-        );
-        $ids = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $desc = $row['descripcion'];
-            if (preg_match('/Orden de Laboratorio #(\d+)/', $desc, $m)) {
-                $ids[] = (int) $m[1];
-            }
-        }
-        return $ids;
-    }
-
-    public function getOrdenesImgFacturadas()
-    {
-        $stmt = $this->pdo->query(
-            "SELECT DISTINCT fd.descripcion FROM factura_detalle fd 
-             WHERE fd.tipo_item = 'imagenes' AND fd.descripcion LIKE 'Estudio de Imágenes #%'"
-        );
-        $ids = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $desc = $row['descripcion'];
-            if (preg_match('/Estudio de Imágenes #(\d+)/', $desc, $m)) {
-                $ids[] = (int) $m[1];
-            }
-        }
-        return $ids;
     }
 
     public function getMonthlyRevenue($year, $month)

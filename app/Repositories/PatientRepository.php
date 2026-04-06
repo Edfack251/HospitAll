@@ -13,13 +13,12 @@ class PatientRepository extends BaseRepository
 
     public function getAllBasic()
     {
-        $sql = $this->applySoftDeleteFilter("SELECT id, nombre, apellido FROM pacientes ORDER BY nombre ASC LIMIT 500");
+        $sql = $this->applySoftDeleteFilter("SELECT id, nombre, apellido FROM pacientes ORDER BY nombre ASC");
         return $this->pdo->query($sql)->fetchAll();
     }
 
     public function getAll($limit = null, $offset = 0)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = "SELECT * FROM pacientes ORDER BY created_at DESC";
         $sql = $this->applySoftDeleteFilter($sql);
         
@@ -37,7 +36,6 @@ class PatientRepository extends BaseRepository
 
     public function getById($id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = $this->applySoftDeleteFilter("SELECT * FROM pacientes WHERE id = ?");
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$id]);
@@ -54,7 +52,6 @@ class PatientRepository extends BaseRepository
 
     public function getByIdentificacion($identificacion)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = $this->applySoftDeleteFilter("SELECT * FROM pacientes WHERE identificacion = ?");
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$identificacion]);
@@ -63,7 +60,6 @@ class PatientRepository extends BaseRepository
 
     public function search($query)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = "SELECT * FROM pacientes 
                 WHERE (nombre LIKE ? 
                 OR apellido LIKE ? 
@@ -76,27 +72,6 @@ class PatientRepository extends BaseRepository
         $term = "%$query%";
         $stmt->execute([$term, $term, $term, $term]);
         return $stmt->fetchAll();
-    }
-
-    /**
-     * Crea un registro de paciente para emergencias (sin cuenta de portal).
-     * Solo los datos mínimos necesarios para identificar al paciente.
-     */
-    public function createForEmergencia(array $data): int
-    {
-        $sql = "INSERT INTO pacientes (usuario_id, nombre, apellido, identificacion, identificacion_tipo, fecha_nacimiento, genero, telefono) 
-                VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([
-            $data['nombre'],
-            $data['apellido'],
-            $data['identificacion'],
-            $data['identificacion_tipo'] ?? 'Cédula',
-            $data['fecha_nacimiento'],
-            $data['genero'],
-            $data['telefono'] ?? null
-        ]);
-        return (int) $this->pdo->lastInsertId();
     }
 
     public function create($usuario_id, $data)
@@ -173,7 +148,6 @@ class PatientRepository extends BaseRepository
 
     public function getIdentityData($paciente_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt = $this->pdo->prepare("SELECT * FROM pacientes_identidad WHERE paciente_id = ?");
         $stmt->execute([$paciente_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);

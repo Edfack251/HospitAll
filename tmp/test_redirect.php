@@ -1,8 +1,6 @@
 <?php
-/**
- * HospitAll - Root entry point.
- * Redirects all requests to public/ so that public/index.php is the sole handler.
- */
+$_SERVER['REQUEST_URI'] = '/HospitAll%20V1/';
+$_SERVER['SCRIPT_NAME'] = '/HospitAll V1/index.php';
 
 $uri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = urldecode(parse_url($uri, PHP_URL_PATH));
@@ -26,5 +24,7 @@ if ($query) {
     $dest .= '?' . $query;
 }
 
-header('Location: ' . $dest, true, 302);
-exit;
+echo "Path: $path\n";
+echo "Base: $base\n";
+echo "RelPath: $relPath\n";
+echo "Dest: $dest\n";

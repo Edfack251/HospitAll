@@ -11,22 +11,6 @@ $csrfToken = App\Helpers\CsrfHelper::generateToken();
 include __DIR__ . '/../layout/header.php';
 ?>
 
-<!-- Banner Informativo -->
-<div class="mb-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-xl shadow-sm">
-    <div class="flex items-center">
-        <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-        </div>
-        <div class="ml-3">
-            <p class="text-sm text-blue-700 font-medium">
-                <span class="font-bold">Nota:</span> El tablero es puramente informativo. Los cambios de estado en este panel <span class="underline">no automatizan</span> acciones médicas (como facturación o altas reales). Deben gestionarse manualmente en sus respectivos módulos.
-            </p>
-        </div>
-    </div>
-</div>
-
 <div class="mb-4 flex justify-between items-center">
     <p class="text-gray-500 text-sm">Actualización automática cada 10 segundos.</p>
     <button onclick="fetchFlowData()"
@@ -74,29 +58,12 @@ include __DIR__ . '/../layout/header.php';
 
             if (data[col.id] && data[col.id].length > 0) {
                 data[col.id].forEach(apt => {
-                    const isEmergencia = apt.tipo_registro === 'emergencia';
                     const card = document.createElement('div');
-                    card.className = `bg-white p-4 rounded-xl shadow-sm border transition-all cursor-default ${isEmergencia ? 'border-red-300 ring-1 ring-red-100' : 'border-gray-200 hover:shadow-md hover:border-blue-200'}`;
+                    card.className = 'bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-blue-200 transition-all cursor-default';
 
-                    // Formatear hora (de HH:MM:SS a HH:MM o usar fecha completa)
-                    let horaFormat = '';
-                    if (apt.hora) {
-                        const h = apt.hora.includes(' ') ? apt.hora.split(' ')[1] : apt.hora;
-                        const horaArr = h.split(':');
-                        horaFormat = `${horaArr[0]}:${horaArr[1]}`;
-                    }
-
-                    let triageBadge = '';
-                    if (isEmergencia) {
-                        const triageColors = {
-                            'Rojo': 'bg-red-600 text-white',
-                            'Naranja': 'bg-orange-500 text-white',
-                            'Amarillo': 'bg-yellow-400 text-gray-900',
-                            'Verde': 'bg-green-500 text-white'
-                        };
-                        const colorClass = triageColors[apt.nivel_triage] || 'bg-gray-500 text-white';
-                        triageBadge = `<span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ${colorClass} mr-2">TRIAJE ${apt.nivel_triage}</span>`;
-                    }
+                    // Formatear hora (de HH:MM:SS a HH:MM)
+                    const horaArr = apt.hora.split(':');
+                    const horaFormat = `${horaArr[0]}:${horaArr[1]}`;
 
                     let optionsHtml = '';
                     flowColumns.forEach(c => {
@@ -104,24 +71,16 @@ include __DIR__ . '/../layout/header.php';
                     });
                     optionsHtml += `<option value="alta">Dar de Alta</option>`;
 
-                    const updateFunc = isEmergencia ? `changeEmergencyStatus(${apt.id}, this.value)` : `changeStatus(${apt.id}, this.value)`;
-
                     card.innerHTML = `
-                    <div class="flex flex-col mb-3">
-                        <div class="flex justify-between items-start mb-1">
-                            <h4 class="font-bold text-gray-800 text-sm leading-tight pr-2">${apt.paciente_nombre} ${apt.paciente_apellido}</h4>
-                            <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-md">${horaFormat}</span>
-                        </div>
-                        <div class="flex items-center">
-                            ${triageBadge}
-                            ${isEmergencia ? '<span class="text-[9px] font-bold text-red-600 uppercase flex items-center"><svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"></path></svg>Emergencia</span>' : ''}
-                        </div>
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="font-bold text-gray-800 text-sm leading-tight pr-2">${apt.paciente_nombre} ${apt.paciente_apellido}</h4>
+                        <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-md mt-1">${horaFormat}</span>
                     </div>
                     <p class="text-xs text-gray-500 mb-4 flex items-center font-medium">
                         <svg class="w-3.5 h-3.5 mr-1.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                        ${apt.medico_apellido ? 'Dr(a). ' + apt.medico_apellido : 'Médico no asignado'}
+                        Dr(a). ${apt.medico_apellido}
                     </p>
-                    <select onchange="${updateFunc}" class="w-full text-xs box-border rounded-md border-gray-200 bg-gray-50 shadow-sm p-2 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-gray-700 font-semibold cursor-pointer appearance-none">
+                    <select onchange="changeStatus(${apt.id}, this.value)" class="w-full text-xs box-border rounded-md border-gray-200 bg-gray-50 shadow-sm p-2 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-gray-700 font-semibold cursor-pointer appearance-none">
                         ${optionsHtml}
                     </select>
                 `;
@@ -176,45 +135,6 @@ include __DIR__ . '/../layout/header.php';
                 } else {
                     alert('Error al cambiar estado: ' + (res.error || 'Desconocido'));
                     fetchFlowData(); // Revert
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Error de conexión');
-            });
-    }
-
-    function changeEmergencyStatus(emergenciaId, nuevoEstado) {
-        if (!nuevoEstado) return;
-
-        const csrfToken = '<?php echo $csrfToken; ?>';
-        
-        // Mapeo inverso de columnas Kanban a estados de Emergencia
-        let estadoEmergencia = 'En espera';
-        if (nuevoEstado === 'en_consulta' || nuevoEstado === 'en_procedimiento' || nuevoEstado === 'observacion') {
-            estadoEmergencia = 'En atención';
-        } else if (nuevoEstado === 'alta') {
-            estadoEmergencia = 'Finalizada';
-        }
-
-        fetch('<?php echo \App\Helpers\UrlHelper::url('api/enfermeria/emergencia/actualizar-estado'); ?>', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': csrfToken
-            },
-            body: JSON.stringify({
-                id: emergenciaId,
-                estado: estadoEmergencia
-            })
-        })
-            .then(res => res.json())
-            .then(res => {
-                if (res.success) {
-                    fetchFlowData();
-                } else {
-                    alert('Error al cambiar estado de emergencia: ' + (res.error || 'Desconocido'));
-                    fetchFlowData();
                 }
             })
             .catch(err => {

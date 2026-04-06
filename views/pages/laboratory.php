@@ -7,9 +7,7 @@ use App\Helpers\CsrfHelper;
 AuthHelper::checkRole(['administrador', 'tecnico_laboratorio', 'recepcionista']);
 
 $controller = new LaboratoryController($pdo);
-$data = $controller->index();
-$ordenes = $data['ordenes'] ?? [];
-$ordenesLabFacturados = $data['ordenesLabFacturados'] ?? [];
+$ordenes = $controller->index();
 
 $pageTitle = 'Laboratorio - HospitAll';
 $activePage = 'laboratorio';
@@ -24,7 +22,7 @@ $pendientes = array_filter($ordenes, function ($o) {
     return $o['estado'] === 'Pendiente';
 });
 $completadas = array_filter($ordenes, function ($o) {
-    return $o['estado'] === 'Completada' && $_SESSION['user_role'] !== 'recepcionista';
+    return $o['estado'] === 'Completada';
 });
 ?>
 
@@ -34,12 +32,10 @@ $completadas = array_filter($ordenes, function ($o) {
             class="tab-btn border-b-2 border-[#007BFF] py-4 px-1 text-sm font-medium text-[#007BFF]">
             Pendientes (<?php echo count($pendientes); ?>)
         </button>
-        <?php if ($_SESSION['user_role'] !== 'recepcionista'): ?>
         <button onclick="switchTab('tab-completadas')" id="btn-completadas"
             class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
             Completadas (<?php echo count($completadas); ?>)
         </button>
-        <?php endif; ?>
     </nav>
 </div>
 
@@ -84,25 +80,18 @@ $completadas = array_filter($ordenes, function ($o) {
                         </td>
                         <td class="py-4 space-y-2">
                             <?php if (in_array($_SESSION['user_role'], ['administrador', 'recepcionista'])): ?>
-                                <?php $yaFacturada = in_array($o['id'], $ordenesLabFacturados); ?>
-                                <?php if ($yaFacturada): ?>
-                                    <span class="inline-block text-xs bg-gray-100 text-gray-500 px-3 py-2 rounded w-full font-medium text-center">
-                                        Facturado
-                                    </span>
-                                <?php else: ?>
-                                    <form action="<?php echo UrlHelper::url('api/laboratory/bill'); ?>" method="POST">
-                                        <?php $csrf_lab = \App\Helpers\CsrfHelper::generateToken(); ?>
-                                        <input type="hidden" name="csrf_token" value="<?php echo $csrf_lab; ?>">
-                                        <input type="hidden" name="orden_id" value="<?php echo $o['id']; ?>">
-                                        <input type="hidden" name="paciente_id" value="<?php echo $o['paciente_id_real']; ?>">
-                                        <input type="hidden" name="descripcion"
-                                            value="<?php echo htmlspecialchars($o['descripcion']); ?>">
-                                        <button type="submit"
-                                            class="text-xs bg-[#28A745] text-white px-3 py-2 rounded hover:bg-green-700 transition-colors w-full font-bold shadow-sm">
-                                            Cobrar Análisis
-                                        </button>
-                                    </form>
-                                <?php endif; ?>
+                                <form action="<?php echo UrlHelper::url('api/laboratory/bill'); ?>" method="POST">
+                                    <?php $csrf_lab = \App\Helpers\CsrfHelper::generateToken(); ?>
+                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_lab; ?>">
+                                    <input type="hidden" name="orden_id" value="<?php echo $o['id']; ?>">
+                                    <input type="hidden" name="paciente_id" value="<?php echo $o['paciente_id_real']; ?>">
+                                    <input type="hidden" name="descripcion"
+                                        value="<?php echo htmlspecialchars($o['descripcion']); ?>">
+                                    <button type="submit"
+                                        class="text-xs bg-[#28A745] text-white px-3 py-2 rounded hover:bg-green-700 transition-colors w-full font-bold shadow-sm">
+                                        Cobrar Análisis
+                                    </button>
+                                </form>
                             <?php endif; ?>
 
                             <?php if (in_array($_SESSION['user_role'], ['administrador', 'tecnico_laboratorio'])): ?>
@@ -185,9 +174,10 @@ $completadas = array_filter($ordenes, function ($o) {
             </div>
             <div>
                 <label class="block text-sm font-semibold mb-2">Anexar PDF de Resultados</label>
-                <input type="file" name="archivo_pdf" id="modalFile" accept="application/pdf" required
+                <input type="file" name="archivo_pdf" id="modalFile" accept="application/pdf"
                     class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                <p class="text-[10px] text-gray-400 mt-1">Solo se permiten archivos PDF. Obligatorio.</p>
+                <p class="text-[10px] text-gray-400 mt-1">Solo se permiten archivos PDF. Dejar vacío si solo desea
+                    corregir el texto.</p>
             </div>
             <div class="flex justify-end space-x-3 pt-4">
                 <button type="button" onclick="closeResultModal()"
@@ -205,6 +195,13 @@ $completadas = array_filter($ordenes, function ($o) {
         document.getElementById('modalOrdenId').value = id;
         document.getElementById('modalPacienteName').innerText = "Paciente: " + paciente;
         document.getElementById('modalResultadoText').value = existingText;
+
+        const fileInput = document.getElementById('modalFile');
+        if (existingText !== '') {
+            fileInput.required = false;
+        } else {
+            fileInput.required = true;
+        }
 
         document.getElementById('resultModal').classList.remove('hidden');
     }

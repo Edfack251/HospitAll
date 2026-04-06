@@ -3,7 +3,7 @@ namespace App\Services;
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
-use App\Repositories\AppointmentRepository;
+use App\Repositories\AppointmentsRepository;
 use App\Repositories\BillingRepository;
 use App\Repositories\PatientRepository;
 use App\Repositories\PharmacyRepository;
@@ -18,7 +18,7 @@ class AdminReportService
     private $laboratoryRepo;
 
     public function __construct(
-        AppointmentRepository $appointmentsRepo,
+        AppointmentsRepository $appointmentsRepo,
         BillingRepository $billingRepo,
         PatientRepository $patientRepo,
         PharmacyRepository $pharmacyRepo,

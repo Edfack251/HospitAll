@@ -109,36 +109,6 @@ class BillingService
     }
 
     /**
-     * Crea una factura específica para estudios de imágenes leyendo la tarifa configurada en 'servicios'
-     */
-    public function createImagingInvoice($paciente_id, $orden_id, $descripcion_img = '')
-    {
-        try {
-            $servicio = $this->repo->getServiceBase('imagenes', 'IMG_STD');
-
-            if (!$servicio) {
-                throw new Exception("No se encontró el servicio base de Imágenes Standard (IMG_STD) en la base de datos.");
-            }
-
-            $desc_final = 'Estudio de Imágenes #' . $orden_id . ($descripcion_img ? ' - ' . $descripcion_img : '');
-
-            $factura_id = $this->createInvoice($paciente_id);
-            $this->addItem($factura_id, [
-                'servicio_id' => $servicio['id'],
-                'tipo_item' => 'imagenes',
-                'descripcion' => $desc_final,
-                'cantidad' => 1,
-                'precio' => $servicio['precio']
-            ]);
-
-            return $factura_id;
-        } catch (Exception $e) {
-            error_log("Error BillingService::createImagingInvoice: " . $e->getMessage());
-            throw new Exception("Error al emitir factura automática de imágenes.");
-        }
-    }
-
-    /**
      * Añade un ítem a la factura y actualiza automáticamente el total.
      */
     public function addItem($factura_id, $data)
@@ -218,19 +188,6 @@ class BillingService
     public function getInvoiceItems($factura_id)
     {
         return $this->repo->getInvoiceItems($factura_id);
-    }
-
-    /**
-     * IDs de órdenes de laboratorio que ya tienen factura emitida (no mostrar botón Cobrar).
-     */
-    public function getOrdenesLabFacturados()
-    {
-        return $this->repo->getOrdenesLabFacturados();
-    }
-
-    public function getOrdenesImgFacturadas()
-    {
-        return $this->repo->getOrdenesImgFacturadas();
     }
 
     /**

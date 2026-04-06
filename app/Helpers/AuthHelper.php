@@ -9,10 +9,7 @@ class AuthHelper
     {
         self::requireLogin();
 
-        $userRole = strtolower($_SESSION['user_role'] ?? '');
-        $allowedRolesLower = array_map('strtolower', $allowedRoles);
-
-        if (!in_array($userRole, $allowedRolesLower)) {
+        if (!in_array($_SESSION['user_role'], $allowedRoles)) {
             // Auditoría: Intento de acceso no autorizado
             global $pdo;
             if (isset($pdo)) {
@@ -26,8 +23,7 @@ class AuthHelper
                 );
             }
 
-            UrlHelper::redirect('login', ['error' => 'unauthorized']);
-            exit;
+            UrlHelper::redirect('dashboard', ['error' => 'unauthorized']);
         }
     }
 

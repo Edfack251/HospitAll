@@ -125,30 +125,4 @@ class PatientsController
             ]);
         }
     }
-
-    /**
-     * Endpoint API para buscar pacientes.
-     */
-    public function searchApi()
-    {
-        try {
-            if (session_status() === PHP_SESSION_NONE) session_start();
-            PolicyManager::authorize($_SESSION, 'view_patient');
-
-            $query = $_GET['q'] ?? '';
-            if (empty($query)) {
-                echo json_encode([]);
-                return;
-            }
-
-            $results = $this->service->search($query);
-            
-            header('Content-Type: application/json');
-            echo json_encode($results);
-        } catch (Exception $e) {
-            http_response_code(400);
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-        }
-    }
 }

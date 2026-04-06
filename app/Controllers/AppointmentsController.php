@@ -28,35 +28,6 @@ class AppointmentsController
         ];
     }
 
-    public function getHorariosDisponibles()
-    {
-        header('Content-Type: application/json');
-        try {
-            $medico_id = $_GET['medico_id'] ?? '';
-            $fecha = $_GET['fecha'] ?? '';
-
-            if (empty($medico_id) || empty($fecha)) {
-                throw new Exception("Médico y fecha son requeridos.");
-            }
-
-            if ($fecha < date('Y-m-d')) {
-                throw new Exception("La fecha no puede ser anterior a hoy.");
-            }
-
-            $horarios = $this->service->getHorariosDisponibles((int) $medico_id, $fecha);
-            echo json_encode(['success' => true, 'horarios' => $horarios]);
-        } catch (Exception $e) {
-            if ($e instanceof \PDOException || strpos($e->getMessage(), 'SQLSTATE') !== false) {
-                error_log('[HospitAll] Error en AppointmentsController: ' . $e->getMessage());
-                http_response_code(500);
-                echo json_encode(['success' => false, 'error' => 'Error interno del servidor. Intente de nuevo.']);
-            } else {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-            }
-        }
-    }
-
     public function handleSchedule()
     {
         $this->schedule($_POST);
@@ -85,30 +56,6 @@ class AppointmentsController
             UrlHelper::redirect('dashboard', ['error' => 'unauthorized']);
         }
 
-        // No permitir abrir atención para citas canceladas o no asistidas
-        if (in_array($cita['estado'], ['Cancelada', 'No asistió'])) {
-            $route = ($_SESSION['user_role'] === 'medico') ? 'doctor_agenda' : 'appointments';
-            UrlHelper::redirect($route, ['info' => 'cita_ya_completada']);
-        }
-
-        // Citas Atendidas: permitir solo para "Completar Diagnóstico" (lab terminó, falta actualizar diagnóstico)
-        if ($cita['estado'] === 'Atendida') {
-            $historial = $this->service->getHistorialPrevio($id);
-            $permiteCompletar = $historial
-                && strpos($historial['diagnostico'] ?? '', 'Pendiente') !== false
-                && !$this->service->hasPendingLabOrder($historial['id']);
-            if (!$permiteCompletar) {
-                $route = ($_SESSION['user_role'] === 'medico') ? 'doctor_agenda' : 'appointments';
-                UrlHelper::redirect($route, ['info' => 'cita_ya_completada']);
-            }
-        }
-
-        // Flujo clínico automático: al abrir la atención, el paciente pasa a "En consulta"
-        $estadoClinico = $cita['estado_clinico'] ?? '';
-        if ($estadoClinico !== 'alta' && $estadoClinico !== 'observacion') {
-            $this->service->updateEstadoClinico($id, 'en_consulta');
-        }
-
         $historial_previo = $this->service->getHistorialPrevio($id);
         $resultados_lab = $this->service->getResultadosLab($cita['paciente_id']);
         $historial_completo = $this->service->getHistorialCompleto($id);
@@ -132,38 +79,6 @@ class AppointmentsController
     {
         $this->service->updateStatus($id, $nuevo_estado);
         UrlHelper::redirect('appointments');
-    }
-
-    public function getReprogramData($id)
-    {
-        $cita = $this->service->getById($id);
-        if (!$cita) {
-            UrlHelper::redirect('appointments', ['error' => 'cita_no_disponible']);
-        }
-        if (in_array($cita['estado'], ['Atendida', 'Cancelada', 'No asistió'])) {
-            UrlHelper::redirect('appointments', ['error' => 'no_reprogramable']);
-        }
-        return [
-            'cita' => $cita,
-            'pacientes' => $this->service->getPacientes(),
-            'medicos' => $this->service->getMedicos()
-        ];
-    }
-
-    public function handleReprogram()
-    {
-        $id = (int) ($_POST['cita_id'] ?? 0);
-        $fecha = $_POST['fecha'] ?? '';
-        $hora = $_POST['hora'] ?? '';
-        if (!$id || !$fecha || !$hora) {
-            UrlHelper::redirect('appointments_reprogram', ['id' => $id, 'error' => '1', 'msg' => 'Datos incompletos.']);
-        }
-        try {
-            $this->service->reprogram($id, $fecha, $hora);
-            UrlHelper::redirect('appointments', ['success' => 'reprogramada']);
-        } catch (Exception $e) {
-            UrlHelper::redirect('appointments_reprogram', ['id' => $id, 'error' => '1', 'msg' => $e->getMessage()]);
-        }
     }
 
     public function handleSaveAttention()
@@ -198,17 +113,5 @@ class AppointmentsController
         } catch (Exception $e) {
             ErrorHandler::handle($e);
         }
-    }
-
-    public function getTodayByPatient()
-    {
-        header('Content-Type: application/json');
-        $paciente_id = (int)($_GET['paciente_id'] ?? 0);
-        if (!$paciente_id) {
-            echo json_encode([]);
-            return;
-        }
-        $citas = $this->service->getTodayByPatient($paciente_id);
-        echo json_encode($citas);
     }
 }

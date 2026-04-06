@@ -4,7 +4,7 @@ namespace App\Controllers;
 use App\Config\Database;
 use App\Policies\PolicyManager;
 use App\Services\AdminReportService;
-use App\Repositories\AppointmentRepository;
+use App\Repositories\AppointmentsRepository;
 use App\Repositories\BillingRepository;
 use App\Repositories\PatientRepository;
 use App\Repositories\PharmacyRepository;
@@ -19,7 +19,7 @@ class AdminReportController
     {
         $this->pdo = $pdo;
         
-        $appointmentsRepo = new AppointmentRepository($pdo);
+        $appointmentsRepo = new AppointmentsRepository($pdo);
         $billingRepo = new BillingRepository($pdo);
         $patientRepo = new PatientRepository($pdo);
         $pharmacyRepo = new PharmacyRepository($pdo);

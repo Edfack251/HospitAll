@@ -69,12 +69,6 @@ $headerSubtitle = 'Gestiona tus citas y consulta tu calendario de atenciones.';
 include __DIR__ . '/../layout/header.php';
 ?>
 
-<?php if (isset($_GET['info']) && $_GET['info'] === 'cita_ya_completada'): ?>
-<div class="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-sm">
-    Esa cita ya fue atendida y no admite más modificaciones.
-</div>
-<?php endif; ?>
-
 <!-- FullCalendar CSS -->
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>

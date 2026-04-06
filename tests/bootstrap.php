@@ -14,5 +14,3 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 $_SESSION['user_id'] = 1;
-$_SESSION['user_role'] = 'administrador';
-$_SESSION['last_activity'] = time();

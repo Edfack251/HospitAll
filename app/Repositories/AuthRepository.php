@@ -15,7 +15,6 @@ class AuthRepository
 
     public function getUserByEmail($email)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt = $this->pdo->prepare("SELECT u.*, r.nombre as rol_nombre FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id WHERE u.correo_electronico = ?");
         $stmt->execute([$email]);
         return $stmt->fetch(PDO::FETCH_ASSOC);

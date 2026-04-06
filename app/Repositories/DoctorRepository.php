@@ -7,7 +7,7 @@ class DoctorRepository extends BaseRepository
 {
     public function getAllBasic()
     {
-        $sql = $this->applySoftDeleteFilter("SELECT id, nombre, apellido, especialidad FROM medicos ORDER BY nombre ASC LIMIT 500");
+        $sql = $this->applySoftDeleteFilter("SELECT id, nombre, apellido, especialidad FROM medicos ORDER BY nombre ASC");
         return $this->pdo->query($sql)->fetchAll();
     }
 

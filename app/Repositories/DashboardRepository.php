@@ -34,7 +34,6 @@ class DashboardRepository
 
     public function getProximasCitasProgramadas($limite = 10)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = "SELECT c.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido, 
                        m.nombre as medico_nombre, m.apellido as medico_apellido
                 FROM citas c
@@ -63,7 +62,6 @@ class DashboardRepository
 
     public function getRecientesVentas($limite = 5)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = "SELECT v.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido 
                 FROM ventas_farmacia v
                 JOIN pacientes p ON v.paciente_id = p.id

@@ -14,7 +14,6 @@ class LogRepository
 
     public function getRecentLogs($limit = 5)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt = $this->pdo->prepare("SELECT l.*, u.nombre as usuario_nombre, u.apellido as usuario_apellido, r.nombre as rol_nombre
                                      FROM logs l
                                      JOIN usuarios u ON l.usuario_id = u.id
@@ -60,7 +59,6 @@ class LogRepository
 
         $whereSql = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
 
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = "SELECT l.*, u.nombre as usuario_nombre, u.apellido as usuario_apellido, r.nombre as rol_nombre
                 FROM logs l
                 JOIN usuarios u ON l.usuario_id = u.id
@@ -82,7 +80,7 @@ class LogRepository
 
     public function getUsersForFilter()
     {
-        $stmt = $this->pdo->query("SELECT id, nombre, apellido FROM usuarios ORDER BY nombre ASC LIMIT 500");
+        $stmt = $this->pdo->query("SELECT id, nombre, apellido FROM usuarios ORDER BY nombre ASC");
         return $stmt->fetchAll();
     }
 }

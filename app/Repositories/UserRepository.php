@@ -30,7 +30,6 @@ class UserRepository extends BaseRepository
 
     public function getById($id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = $this->applySoftDeleteFilter("SELECT * FROM usuarios WHERE id = ?");
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$id]);

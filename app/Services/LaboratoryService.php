@@ -23,14 +23,6 @@ class LaboratoryService
         return $this->repo->getAllOrders($limit, $offset);
     }
 
-    public function createWalkinOrder($walkin_id, $descripcion, array $examenes = [])
-    {
-        if (empty($walkin_id)) {
-            throw new Exception("El ID de walkin es requerido.");
-        }
-        return $this->repo->createPendingWalkin($walkin_id, $descripcion, $examenes);
-    }
-
     public function uploadResult($data, $files)
     {
         $orden_id = $data['orden_id'] ?? '';
@@ -47,10 +39,6 @@ class LaboratoryService
             if (!mkdir($upload_dir, 0777, true)) {
                 throw new Exception("Error: No se pudo crear el directorio de subida.");
             }
-        }
-
-        if (empty($files['archivo_pdf']) || $files['archivo_pdf']['error'] !== UPLOAD_ERR_OK) {
-            throw new Exception("El archivo PDF es obligatorio para subir resultados.");
         }
 
         $file_path = null;
@@ -162,13 +150,5 @@ class LaboratoryService
         }
 
         return $res;
-    }
-
-    /**
-     * Actualiza el estado de una orden (Pendiente → En proceso → Completada).
-     */
-    public function updateEstadoOrden(int $id, string $estado): bool
-    {
-        return $this->repo->actualizarEstadoOrden($id, $estado);
     }
 }

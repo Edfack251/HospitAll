@@ -2,18 +2,15 @@
 namespace App\Controllers;
 
 use App\Services\AppointmentsService;
-use App\Repositories\EmergencyRepository;
 use Exception;
 
 class PatientFlowController
 {
     private $service;
-    private $emergenciaRepo;
 
     public function __construct($pdo)
     {
         $this->service = new AppointmentsService($pdo);
-        $this->emergenciaRepo = new EmergencyRepository($pdo);
     }
 
     public function index()
@@ -49,17 +46,6 @@ class PatientFlowController
 
                 if (isset($grouped[$estado])) {
                     $grouped[$estado][] = $apt;
-                }
-            }
-
-            // Integrar Emergencias
-            $emergencias = $this->emergenciaRepo->getEmergenciasParaFlow();
-            foreach ($emergencias as $emg) {
-                // Mapeo: 'En espera' -> esperando_medico, 'En atención' -> en_consulta
-                $estadoKanban = ($emg['estado'] === 'En espera') ? 'esperando_medico' : 'en_consulta';
-                
-                if (isset($grouped[$estadoKanban])) {
-                    $grouped[$estadoKanban][] = $emg;
                 }
             }
 

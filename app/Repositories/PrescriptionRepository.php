@@ -40,7 +40,6 @@ class PrescriptionRepository extends BaseRepository
 
     public function getByCita($cita_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = $this->applySoftDeleteFilter("SELECT * FROM prescripciones WHERE cita_id = ?");
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$cita_id]);
@@ -57,7 +56,6 @@ class PrescriptionRepository extends BaseRepository
 
     public function getDetalles($prescripcion_id)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $stmt = $this->pdo->prepare("SELECT * FROM prescripcion_detalle WHERE prescripcion_id = ?");
         $stmt->execute([$prescripcion_id]);
         return $stmt->fetchAll();
@@ -71,7 +69,6 @@ class PrescriptionRepository extends BaseRepository
 
     public function getPrescripcionesActivas($medico_id, $limit = 5)
     {
-        // TODO: Refactorizar SELECT * cuando se estabilice la vista
         $sql = "SELECT p.*, pac.nombre as paciente_nombre, pac.apellido as paciente_apellido, c.fecha as fecha_cita
                 FROM prescripciones p
                 JOIN pacientes pac ON p.paciente_id = pac.id
@@ -88,16 +85,6 @@ class PrescriptionRepository extends BaseRepository
         $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function getPrescripcionesActivasCount($medico_id)
-    {
-        $sql = "SELECT COUNT(*) FROM prescripciones p
-                WHERE p.medico_id = ? AND p.estado = 'Pendiente'";
-        $sql = $this->applySoftDeleteFilter($sql, 'p');
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$medico_id]);
-        return (int)$stmt->fetchColumn();
     }
 
     public function delete($id)

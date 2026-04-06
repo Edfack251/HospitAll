@@ -1,16 +1,16 @@
 <?php
-use App\Helpers\AuthHelper;
 use App\Helpers\UrlHelper;
-use App\Helpers\CsrfHelper;
 
-AuthHelper::checkRole(['medico', 'administrador']);
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'medico') {
+    header("Location: /login.php");
+    exit;
+}
 
 $pageTitle = 'Dashboard Médico - HospitAll';
 $activePage = 'doctor_dashboard';
 $headerTitle = 'Panel Médico';
 $headerSubtitle = 'Resumen de tu actividad clínica y pacientes.';
-$csrfToken = CsrfHelper::generateToken();
-include __DIR__ . '/layout/header.php';
+include __DIR__ . '/pages/../layout/header.php';
 ?>
 
 <?php if (isset($error)): ?>
@@ -21,11 +21,9 @@ include __DIR__ . '/layout/header.php';
         </span>
     </div>
 <?php endif; ?>
- 
-
 
 <!-- Stats Grid -->
-<div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-10">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
     <!-- Citas de hoy -->
     <div class="glass-card p-6 rounded-2xl shadow-sm border border-blue-50">
         <p class="text-sm font-bold text-gray-500 uppercase tracking-wider">Citas para Hoy</p>
@@ -44,63 +42,19 @@ include __DIR__ . '/layout/header.php';
     <div class="glass-card p-6 rounded-2xl shadow-sm border border-purple-50">
         <p class="text-sm font-bold text-gray-500 uppercase tracking-wider">Labs Pendientes</p>
         <p class="text-4xl font-extrabold text-purple-600 mt-2">
-            <?php echo isset($count_labs_pendientes) ? (int)$count_labs_pendientes : 0; ?>
+            <?php echo count($resultados_pendientes); ?>
         </p>
     </div>
-    <!-- Pacientes Internados -->
-    <div class="glass-card p-6 rounded-2xl shadow-sm border border-indigo-50">
-        <p class="text-sm font-bold text-gray-500 uppercase tracking-wider">Internados</p>
-        <p class="text-4xl font-extrabold text-indigo-600 mt-2">
-            <?php echo count($pacientes_internados ?? []); ?>
+    <!-- Prescripciones Activas -->
+    <div class="glass-card p-6 rounded-2xl shadow-sm border border-green-50">
+        <p class="text-sm font-bold text-gray-500 uppercase tracking-wider">Prescripciones</p>
+        <p class="text-4xl font-extrabold text-[#28A745] mt-2">
+            <?php echo count($prescripciones_activas); ?>
         </p>
     </div>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-
-    <!-- Emergencias asignadas -->
-    <div class="glass-card p-8 rounded-2xl shadow-sm border border-gray-100">
-        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-            <svg class="w-6 h-6 mr-2 text-[#DC3545]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-            </svg>
-            Emergencias asignadas
-        </h3>
-
-        <?php if (empty($emergencias_asignadas ?? [])): ?>
-            <p class="text-gray-500 text-center py-4">No tienes emergencias asignadas en este momento.</p>
-        <?php else: ?>
-            <ul class="divide-y divide-gray-100">
-                <?php
-                $triageBg = ['Rojo' => 'bg-red-100 text-red-700', 'Naranja' => 'bg-orange-100 text-orange-700', 'Amarillo' => 'bg-yellow-100 text-yellow-700', 'Verde' => 'bg-green-100 text-green-700'];
-                foreach ($emergencias_asignadas as $e):
-                    $tClass = $triageBg[$e['nivel_triage'] ?? 'Verde'] ?? 'bg-gray-100 text-gray-700';
-                ?>
-                    <li class="py-4 flex justify-between items-center">
-                        <div>
-                            <p class="font-bold text-gray-800">
-                                <?php echo htmlspecialchars($e['paciente_nombre'] . ' ' . $e['paciente_apellido']); ?>
-                            </p>
-                            <p class="text-xs text-gray-500">
-                                <?php echo htmlspecialchars($e['motivo_ingreso']); ?>
-                            </p>
-                            <p class="text-xs text-gray-500 mt-1">
-                                Hora: <?php echo date('H:i', strtotime($e['fecha_ingreso'])); ?>
-                            </p>
-                        </div>
-                        <div class="flex flex-col items-end gap-1">
-                            <span class="px-2 py-1 text-xs font-bold rounded-full <?php echo $tClass; ?>">
-                                <?php echo htmlspecialchars($e['nivel_triage'] ?? 'Verde'); ?>
-                            </span>
-                            <a href="<?php echo UrlHelper::url('emergency_attend'); ?>?emergencia_id=<?php echo (int) $e['id']; ?>"
-                                class="text-[#007BFF] hover:text-blue-800 font-bold text-sm">Atender</a>
-                        </div>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        <?php endif; ?>
-    </div>
 
     <!-- Pacientes en Espera -->
     <div class="glass-card p-8 rounded-2xl shadow-sm border border-gray-100">
@@ -175,37 +129,6 @@ include __DIR__ . '/layout/header.php';
                     <?php endforeach; ?>
                 </ul>
             </div>
-        <?php endif; ?>
-    </div>
-
-    <!-- Pacientes Internados -->
-    <div class="glass-card p-8 rounded-2xl shadow-sm border border-gray-100 lg:col-span-1">
-        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-            <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-            </svg>
-            Tus Pacientes Internados
-        </h3>
-
-        <?php if (empty($pacientes_internados)): ?>
-            <p class="text-gray-500 text-center py-4 text-sm italic">No tienes pacientes internados.</p>
-        <?php else: ?>
-            <ul class="divide-y divide-gray-100">
-                <?php foreach ($pacientes_internados as $pi): ?>
-                    <li class="py-3 flex justify-between items-center text-sm">
-                        <div>
-                            <p class="font-bold text-gray-700">
-                                <?php echo htmlspecialchars($pi['paciente_nombre'] . ' ' . $pi['paciente_apellido']); ?>
-                            </p>
-                            <p class="text-xs text-blue-600 font-semibold">
-                                Cama <?php echo htmlspecialchars($pi['cama_numero']); ?> - Hab. <?php echo htmlspecialchars($pi['habitacion_numero']); ?>
-                            </p>
-                        </div>
-                        <a href="<?php echo UrlHelper::url('hospitalization'); ?>?internamiento_id=<?php echo $pi['id']; ?>" 
-                           class="text-indigo-600 hover:text-indigo-800 font-bold text-xs">Ver evolución</a>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
         <?php endif; ?>
     </div>
 
@@ -298,5 +221,4 @@ include __DIR__ . '/layout/header.php';
 
 </div>
 
-
-<?php include __DIR__ . '/layout/footer.php'; ?>
+<?php include __DIR__ . '/pages/../layout/footer.php'; ?>
