@@ -330,8 +330,10 @@ INSERT INTO roles (nombre, descripcion) VALUES
 ('recepcionista', 'Gestión de citas y pacientes'),
 ('medico', 'Atención médica y agenda'),
 ('tecnico_laboratorio', 'Gestión de órdenes y resultados de laboratorio'),
+('tecnico_imagenes', 'Gestión de estudios de imágenes diagnósticas'),
 ('farmaceutico', 'Gestión de inventario y despacho de medicamentos'),
-('paciente', 'Acceso a su portal personal');
+('paciente', 'Acceso a su portal personal'),
+('enfermera', 'Gestión de triaje y cuidados de enfermería');
 
 -- Inserción de Servicios Iniciales
 INSERT INTO servicios (codigo, nombre, precio, tipo, activo) VALUES

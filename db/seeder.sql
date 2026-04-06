@@ -4,6 +4,7 @@
 -- ============================================================
 
 USE hospitall;
+SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 SET @hash = '$2y$10$9I2z12HJSIYe8jbIbYuNveJkuFoNA5M6txwjLPCc17wzv/2sWV/pm';
 
@@ -51,22 +52,22 @@ ALTER TABLE ventas_farmacia_detalle AUTO_INCREMENT = 1;
 
 -- ============================================================
 -- PASO 2: Usuarios (12 usuarios)
--- Roles: 1=administrador, 2=recepcionista, 3=medico,
---        4=tecnico_laboratorio, 5=farmaceutico, 6=paciente
+-- Roles resueltos dinámicamente por nombre
 -- ============================================================
 INSERT INTO usuarios (id, nombre, apellido, correo_electronico, password, rol_id) VALUES
-(1, 'Admin', 'Sistema', 'admin@hospitall.do', @hash, 1),
-(2, 'María', 'González', 'maria.gonzalez@hospitall.do', @hash, 2),
-(3, 'Rafael', 'Méndez', 'rafael.mendez@hospitall.do', @hash, 3),
-(4, 'Carmen', 'Reyes', 'carmen.reyes@hospitall.do', @hash, 3),
-(5, 'José', 'Taveras', 'jose.taveras@hospitall.do', @hash, 3),
-(6, 'Ana', 'Martínez', 'ana.martinez@hospitall.do', @hash, 4),
-(7, 'Luis', 'Hernández', 'luis.hernandez@hospitall.do', @hash, 5),
-(8, 'Pedro', 'Sánchez', 'pedro.sanchez@correo.do', @hash, 6),
-(9, 'Rosa', 'Almonte', 'rosa.almonte@correo.do', @hash, 6),
-(10, 'Miguel', 'Castillo', 'miguel.castillo@correo.do', @hash, 6),
-(11, 'Luz', 'Peña', 'luz.pena@correo.do', @hash, 6),
-(12, 'Carlos', 'Bautista', 'carlos.bautista@correo.do', @hash, 6);
+(1, 'Admin', 'Sistema', 'admin@hospitall.do', @hash, (SELECT id FROM roles WHERE nombre = 'administrador')),
+(2, 'María', 'González', 'maria.gonzalez@hospitall.do', @hash, (SELECT id FROM roles WHERE nombre = 'recepcionista')),
+(3, 'Rafael', 'Méndez', 'rafael.mendez@hospitall.do', @hash, (SELECT id FROM roles WHERE nombre = 'medico')),
+(4, 'Carmen', 'Reyes', 'carmen.reyes@hospitall.do', @hash, (SELECT id FROM roles WHERE nombre = 'medico')),
+(5, 'José', 'Taveras', 'jose.taveras@hospitall.do', @hash, (SELECT id FROM roles WHERE nombre = 'medico')),
+(6, 'Ana', 'Martínez', 'ana.martinez@hospitall.do', @hash, (SELECT id FROM roles WHERE nombre = 'tecnico_laboratorio')),
+(7, 'Luis', 'Hernández', 'luis.hernandez@hospitall.do', @hash, (SELECT id FROM roles WHERE nombre = 'farmaceutico')),
+(8, 'Pedro', 'Sánchez', 'pedro.sanchez@correo.do', @hash, (SELECT id FROM roles WHERE nombre = 'paciente')),
+(9, 'Rosa', 'Almonte', 'rosa.almonte@correo.do', @hash, (SELECT id FROM roles WHERE nombre = 'paciente')),
+(10, 'Miguel', 'Castillo', 'miguel.castillo@correo.do', @hash, (SELECT id FROM roles WHERE nombre = 'paciente')),
+(11, 'Luz', 'Peña', 'luz.pena@correo.do', @hash, (SELECT id FROM roles WHERE nombre = 'paciente')),
+(12, 'Carlos', 'Bautista', 'carlos.bautista@correo.do', @hash, (SELECT id FROM roles WHERE nombre = 'paciente'));
+
 
 -- ============================================================
 -- PASO 3: Médicos

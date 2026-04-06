@@ -36,6 +36,9 @@ class AuthController
                     case 'tecnico_laboratorio':
                         UrlHelper::redirect('laboratory');
                         break;
+                    case 'farmaceutico':
+                        UrlHelper::redirect('dashboard');
+                        break;
                     case 'administrador':
                         UrlHelper::redirect('api/admin/dashboard');
                         break;
