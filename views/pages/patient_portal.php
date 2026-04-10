@@ -208,7 +208,7 @@ include __DIR__ . '/../layout/header.php';
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-[#212529]">Historial y Tratamientos</h3>
-                <?php if (in_array($_SESSION['user_role'] ?? '', ['administrador', 'medico'])): ?>
+                <?php if (in_array($_SESSION['user_role'] ?? '', ['administrador', 'paciente'])): ?>
                     <a href="<?php echo App\Helpers\UrlHelper::url('api/clinical-history/export-pdf'); ?>?id=<?php echo $paciente_id; ?>" 
                        target="_blank"
                        class="flex items-center px-4 py-2 bg-[#28A745] rounded-xl text-xs font-bold text-white hover:bg-green-700 transition-all shadow-sm">

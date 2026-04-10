@@ -32,10 +32,12 @@ $completadas = array_filter($ordenes, function ($o) {
             class="tab-btn border-b-2 border-[#007BFF] py-4 px-1 text-sm font-medium text-[#007BFF]">
             Pendientes (<?php echo count($pendientes); ?>)
         </button>
+        <?php if ($_SESSION['user_role'] !== 'recepcionista'): ?>
         <button onclick="switchTab('tab-completadas')" id="btn-completadas"
             class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
             Completadas (<?php echo count($completadas); ?>)
         </button>
+        <?php endif; ?>
     </nav>
 </div>
 
@@ -109,6 +111,7 @@ $completadas = array_filter($ordenes, function ($o) {
     <?php endif; ?>
 </div>
 
+<?php if ($_SESSION['user_role'] !== 'recepcionista'): ?>
 <!-- Sección Completadas -->
 <div id="tab-completadas" class="tab-content hidden glass-card p-4 sm:p-6 md:p-8 rounded-2xl shadow-sm">
     <?php if (empty($completadas)): ?>
@@ -154,6 +157,7 @@ $completadas = array_filter($ordenes, function ($o) {
         </table>
     <?php endif; ?>
 </div>
+<?php endif; ?>
 
 <!-- Modal para cargar resultados -->
 <div id="resultModal"

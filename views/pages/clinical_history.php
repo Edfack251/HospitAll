@@ -172,6 +172,7 @@ include __DIR__ . '/../layout/header.php';
                 </div>
 
                 <div class="mt-8">
+                    <?php if ($_SESSION['user_role'] !== 'medico'): ?>
                     <a href="<?php echo App\Helpers\UrlHelper::url('api/clinical-history/export-pdf'); ?>?id=<?php echo $patient_id; ?>"
                         target="_blank"
                         class="w-full flex items-center justify-center px-4 py-2 bg-[#28A745] rounded-lg text-xs font-bold text-white hover:bg-green-700 transition-all mb-3 shadow-sm">
@@ -182,6 +183,7 @@ include __DIR__ . '/../layout/header.php';
                         </svg>
                         Descargar Historial (PDF)
                     </a>
+                    <?php endif; ?>
                     <a href="<?php echo App\Helpers\UrlHelper::url('clinical_history'); ?>"
                         class="w-full flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-50 transition-all">
                         <svg class="w-3 h-3 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -58,24 +58,32 @@ class ClinicalHistoryController
         }
 
         // 2. Verificar autorización básica mediante PolicyManager
-        try {
-            \App\Policies\PolicyManager::authorize($user, 'view_patient_history');
-        } catch (\Exception $e) {
+        // Primero validamos si el usuario es un paciente (solo puede ver su propio historial)
+        // O si es administrador. Los médicos tienen prohibido DESCARGAR el PDF.
+
+        $role = strtolower($user['role'] ?? $user['rol'] ?? '');
+        
+        if ($role === 'medico') {
             header('HTTP/1.1 403 Forbidden');
-            echo json_encode(['error' => $e->getMessage()]);
+            echo json_encode(['error' => 'Los médicos no tienen autorización para descargar historiales clínicos por motivos de seguridad.']);
             return;
         }
 
-        // 3. Validación adicional para Médicos (deben haber atendido al paciente)
-        $role = strtolower($user['role'] ?? $user['rol'] ?? '');
-        if ($role === 'medico') {
-            // Verificar si es administrador también (si el sistema lo permite)
-            // Por ahora, asumimos que si es SOLO médico, aplica la restricción
-            $is_admin = false; // Aquí se podría verificar si tiene otros roles
-
-            if (!$is_admin && !$this->service->canDoctorAccessPatient($user['id'], $patient_id)) {
+        if ($role === 'paciente') {
+            // El paciente solo puede descargar SU propio historial
+            $session_patient_id = $_SESSION['paciente_id'] ?? null;
+            if (!$session_patient_id || (int)$session_patient_id !== $patient_id) {
                 header('HTTP/1.1 403 Forbidden');
-                echo json_encode(['error' => 'No tienes autorización para ver el historial de este paciente (Sin atención previa)']);
+                echo json_encode(['error' => 'No tienes autorización para descargar este historial clínico.']);
+                return;
+            }
+        } else {
+            // Para otros roles (Administrador)
+            try {
+                \App\Policies\PolicyManager::authorize($user, 'view_patient_history');
+            } catch (\Exception $e) {
+                header('HTTP/1.1 403 Forbidden');
+                echo json_encode(['error' => $e->getMessage()]);
                 return;
             }
         }
